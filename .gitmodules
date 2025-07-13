@@ -1,0 +1,6 @@
+[submodule "modules/picocalc-text-starter"]
+	path = modules/picocalc-text-starter
+	url = https://github.com/BlairLeduc/picocalc-text-starter.git
+[submodule "modules/frotz"]
+	path = modules/frotz
+	url = https://gitlab.com/DavidGriffith/frotz.git
