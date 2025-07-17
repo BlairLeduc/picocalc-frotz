@@ -131,16 +131,21 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 
 	lcd_draw_cursor();
 	lcd_enable_cursor(TRUE);
+
+	buf[max - 1] = 0; // Ensure the buffer is null-terminated
+
 	uint8_t index = 0;
-	if (continued)
+	index = strlen(buf);
+	if (index >= max)
 	{
-		index = strlen(buf);
-		if (index >= max)
-		{
-			index = max - 1; // Ensure we don't overflow the buffer
-		}
-		col -= index;
+		index = max - 1; // Ensure we don't overflow the buffer
 	}
+	if (index > width)
+	{
+		index = width - 1; // Limit to the width of the input line
+	}
+	
+	col -= index;
 	lcd_move_cursor(cursor_col, cursor_row);
 
 	absolute_time_t start_time = get_absolute_time();
@@ -174,14 +179,13 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 		default:
 			if (is_terminator(key))
 			{
-				buf[index] = 0; // Null-terminate the string
-
 				lcd_erase_cursor();
 				lcd_enable_cursor(FALSE);
 
+				buf[index] = 0; // Null-terminate the string
 				return key;
 			}
-			if (index < max - 1)
+			if (index < max - 1 && index < width - 1)
 			{
 				buf[index++] = key;
 				lcd_erase_cursor();
@@ -190,12 +194,13 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 			}
 			else
 			{
-				os_beep(1); // Beep if buffer is full
+				os_beep(1); // Beep if buffer is full or width exceeded
 			}
 			break;
 		}
 	}
 
+	buf[index] = 0; // Null-terminate the string
 	return key;
 }
 

@@ -240,7 +240,8 @@ void os_scroll_area(int top, int left, int bottom, int right, int units)
         {
             uint8_t style = screen[r * SCREEN_WIDTH + c] & 0xFF;
             lcd_set_reverse(style & REVERSE_STYLE);
-            lcd_set_foreground(style & BOLDFACE_STYLE ? BRIGHT : WHITE_PHOSPHOR);
+            lcd_set_bold(style & BOLDFACE_STYLE);
+            lcd_set_underscore(style & EMPHASIS_STYLE);
             lcd_putc(c, r, screen[r * SCREEN_WIDTH + c] >> 16);
         }
     }
@@ -349,7 +350,8 @@ void os_set_text_style(int x)
     // Update the current style for the next character to be displayed.
     text_style = x;
     lcd_set_reverse(text_style & REVERSE_STYLE);
-    lcd_set_foreground(text_style & BOLDFACE_STYLE ? BRIGHT : WHITE_PHOSPHOR);
+    lcd_set_bold(text_style & BOLDFACE_STYLE);
+    lcd_set_underscore(text_style & EMPHASIS_STYLE);
 }
 
 int os_from_true_colour(zword colour)

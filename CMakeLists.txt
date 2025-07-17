@@ -95,7 +95,10 @@ pico_set_program_version(picocalc-frotz "0.1")
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)
 
 # Enable the use of the ROSC for random number generation
-add_compile_definitions(PICO_RAND_ENTROPY_SRC_ROSC=1)
+target_compile_definitions(picocalc-frotz PRIVATE
+    PICO_RAND_ENTROPY_SRC_ROSC=1
+    PICO_STACK_SIZE=4096 # 16 KB stack size
+    )
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(picocalc-frotz 0)

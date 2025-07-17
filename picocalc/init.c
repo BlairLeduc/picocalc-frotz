@@ -38,9 +38,44 @@ char *create_filename(const char *base, const char *extension)
 {
 	size_t size = (strlen(base) + strlen(extension) + 1) * sizeof(char);
 	char *filename = malloc(size);
-	memcpy(filename, base, strlen(base) * sizeof(char));
+	memcpy(filename, base, (strlen(base) + 1) * sizeof(char));
 	strncat(filename, extension, size);
 	return filename;
+}
+
+int story_cmp(const void *a, const void *b)
+{
+	const char *sa = (const char *)a;
+	const char *sb = (const char *)b;
+	return strcmp(sa, sb);
+}
+
+void basic_quit(const char* message)
+{
+	os_erase_area(1, 1, SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+	os_set_cursor(14, 1);
+	os_display_string(message);
+	os_set_cursor(20, 1);
+	os_display_string("      Press any key to retry, or");
+	os_set_cursor(22, 1);
+	os_display_string("      turn off your PicoCalc now.");
+	os_read_key(0, false); // Wait for user input before quitting
+	exit(-1);
+
+}
+
+void hide_ext(char *file_name)
+{
+	char *ext = strrchr(file_name, '.');
+	if (ext != NULL)
+	{
+		*ext = '\0'; // Remove the extension
+	}
+}
+
+void show_ext(char *file_name)
+{
+	file_name[strlen(file_name)] = '.';
 }
 
 bool select_story(void)
@@ -53,18 +88,14 @@ bool select_story(void)
 	// In a real application, you would use a filesystem API to list files.
 
 	fat32_dir_t dir;
-	fat32_error_t result = fat32_dir_open(&dir, "/stories");
+	fat32_error_t result = fat32_dir_open(&dir, "/Stories");
 	if (result != FAT32_OK)
 	{
-		snprintf(buffer, sizeof(buffer), "Error opening /stories directory: %s", fat32_error_string(result));
-		os_fatal(buffer);
+		basic_quit("   Error opening /Stories directory!");
 	}
 
 	fat32_entry_t dir_entry;
-	int index = 0;
-	os_set_cursor(3, 1);
-	os_display_string("Available stories:");
-
+	int num_stories = 0;
 	do
 	{
 		result = fat32_dir_read(&dir, &dir_entry);
@@ -77,23 +108,47 @@ bool select_story(void)
 				if (len >= 3 && dir_entry.filename[len - 3] == '.' && dir_entry.filename[len - 2] == 'z' &&
 					dir_entry.filename[len - 1] >= '1' && dir_entry.filename[len - 1] <= '8')
 				{
-					os_set_cursor(5 + index, 2);
-					snprintf(buffer, sizeof(buffer), "%-38s", dir_entry.filename);
-					os_display_string(buffer);
-					strncpy(stories[index], dir_entry.filename, sizeof(stories[index]) - 1);
-					index++;
+					strncpy(stories[num_stories], dir_entry.filename, sizeof(stories[num_stories]) - 1);
+					hide_ext(stories[num_stories]);
+					num_stories++;
+					if (num_stories >= 24)
+					{
+						break; // Limit to 24 stories
+					}
 				}
 			}
 		}
 	} while (dir_entry.filename[0]);
-
 	fat32_dir_close(&dir);
 
-	os_set_cursor(7 + index, 1);
+	if (num_stories == 0)
+	{
+		basic_quit("   No story files found in /Stories.");
+	}
+	else if (num_stories >= 24)
+	{
+		os_set_cursor(32, 1);
+		os_display_string("Only showing the first 24 stories.");
+		num_stories = 24;
+	}
+
+	// Sort the stories alphabetically
+	qsort(stories, num_stories, sizeof(stories[0]), story_cmp);
+
+	os_set_cursor(3, 1);
+	os_display_string("Available stories:");
+	for (int i = 0; i < num_stories; i++)
+	{
+		os_set_cursor(5 + i, 2);
+		snprintf(buffer, sizeof(buffer), "%-38s", stories[i]);
+		os_display_string(buffer);
+	}
+
+	os_set_cursor(7 + num_stories, 1);
 	os_display_string("Which story would you like to play?");
 
 	char ch = '\0';
-	int count = index - 1;
+	int count = num_stories - 1;
 	int selected = 0;
 
 	os_set_cursor(5, 2);
@@ -116,12 +171,12 @@ bool select_story(void)
 		}
 		else if (ch == ZC_ARROW_DOWN)
 		{
-			if (selected < count)
+			if (selected < num_stories)
 				selected++;
 		}
-		else if (ch != ZC_RETURN)
+		else if (ch == ZC_RETURN)
 		{
-			if (selected >= 0 && selected < index)
+			if (selected >= 0 && selected < num_stories)
 			{
 				strncpy(selected_story, stories[selected], sizeof(selected_story) - 1);
 				selected_story[sizeof(selected_story) - 1] = '\0';
@@ -137,6 +192,7 @@ bool select_story(void)
 	} while (ch != ZC_RETURN);
 
 	selected_story[0] = '\0';
+	show_ext(stories[selected]);
 	strncat(selected_story, "/stories/", sizeof(selected_story) - 1);
 	strncat(selected_story, stories[selected], sizeof(selected_story) - strlen(selected_story) - 1);
 
@@ -149,6 +205,7 @@ void os_process_arguments(int UNUSED(argc), char *UNUSED(argv[]))
 {
 	char *p;
 
+	f_setup.undo_slots = 2;
 	f_setup.format = FORMAT_ANSI;
 
 	// Save the story file name
@@ -183,36 +240,25 @@ void os_init_screen(void)
 {
 	if (z_header.version == V3)
 	{
-		if (f_setup.tandy)
-		{
-			z_header.config |= CONFIG_TANDY;
-		}
 		z_header.config |= CONFIG_SPLITSCREEN;
 		z_header.flags &= ~OLD_SOUND_FLAG;
 	}
 
 	if (z_header.version >= V4)
 	{
-		if (f_setup.tandy)
-		{
-			z_header.config |= CONFIG_TANDY;
-		}
 		z_header.flags &= ~OLD_SOUND_FLAG;
 		z_header.config |= CONFIG_TIMEDINPUT;
 	}
 
 	if (z_header.version >= V5)
 	{
-		if (f_setup.undo_slots == 0)
-		{
-			z_header.flags &= ~UNDO_FLAG;
-		}
+		z_header.flags |= UNDO_FLAG;
 		z_header.flags &= ~SOUND_FLAG;
 	}
 
 	z_header.screen_rows = SCREEN_HEIGHT;
 	z_header.screen_cols = SCREEN_WIDTH;
-	z_header.config |= CONFIG_BOLDFACE;
+	z_header.config |= CONFIG_BOLDFACE | CONFIG_EMPHASIS;
 	z_header.screen_height = z_header.screen_rows;
 	z_header.screen_width = z_header.screen_cols;
 	z_header.font_width = 1;
@@ -223,8 +269,8 @@ void os_init_screen(void)
 	if (f_setup.interpreter_number == INTERP_DEFAULT)
 	{
 		z_header.interpreter_number = z_header.version == 6
-										  ? INTERP_MSDOS
-										  : INTERP_DEC_20;
+			? INTERP_MSDOS
+			: INTERP_DEC_20;
 	}
 	else
 	{
@@ -326,7 +372,7 @@ void os_init_setup(void)
 	audio_init();
 	fat32_init();
 
-	lcd_set_foreground(WHITE_PHOSPHOR);
+	lcd_set_foreground(NORMAL_COLOUR);
 	lcd_enable_cursor(false);
 	os_set_cursor(1, 1);
 	os_display_string("Welcome to the Unofficial Port of Frotz!");
