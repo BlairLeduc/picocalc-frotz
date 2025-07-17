@@ -80,8 +80,6 @@ add_executable(picocalc-frotz
         modules/picocalc-text-starter/drivers/keyboard.h
         modules/picocalc-text-starter/drivers/lcd.c
         modules/picocalc-text-starter/drivers/lcd.h
-        modules/picocalc-text-starter/drivers/picocalc.c
-        modules/picocalc-text-starter/drivers/picocalc.h
         modules/picocalc-text-starter/drivers/sdcard.c
         modules/picocalc-text-starter/drivers/sdcard.h
         modules/picocalc-text-starter/drivers/southbridge.c
