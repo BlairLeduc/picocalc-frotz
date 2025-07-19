@@ -14,7 +14,7 @@ This project adds a small amount of code to integrate the included modules. Each
 - Supports the PicoCalc's LCD display, keyboard, audio output and SD card
 - Provides a 40x32 character display with an easy to read font
 - Emulates a phosphor display, with white, green or amber phosphor (F10 to cycle through modes)
-- Full line editing including history
+- Full line editing including history and tab completion
 - Store stories on an SD card in the Stories directory (`/Stories`)
 - Includes a simple story selector to choose which story to play
 - Supports saving and restoring, quitting and restarting stories
