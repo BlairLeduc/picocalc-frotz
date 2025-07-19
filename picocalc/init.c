@@ -171,7 +171,7 @@ bool select_story(void)
 		}
 		else if (ch == ZC_ARROW_DOWN)
 		{
-			if (selected < num_stories)
+			if (selected < num_stories - 1)
 				selected++;
 		}
 		else if (ch == ZC_RETURN)
@@ -287,6 +287,8 @@ int os_random_seed(void)
 
 void os_quit(int status)
 {
+	char buffer[2];
+
 	if (status == EXIT_SUCCESS)
 	{
 		print_string("\n\nGame over. Thanks for playing!\n");
@@ -296,9 +298,9 @@ void os_quit(int status)
 		print_string("\n\nAn error occurred. Please try again.\n");
 	}
 
-	print_string("\nPress any key to select a story, or ");
+	print_string("\nPress ENTER to select a story, or ");
 	print_string("please turn off your PicoCalc now.\n");
-	read_string(0, NULL); // Wait for user input before quitting
+	read_string(1, buffer); // Wait for user input before quitting
 }
 
 void os_restart_game(int UNUSED(stage))
@@ -372,7 +374,7 @@ void os_init_setup(void)
 	audio_init();
 	fat32_init();
 
-	lcd_set_foreground(NORMAL_COLOUR);
+	lcd_set_foreground(DEFAULT_PHOSPHOR);
 	lcd_enable_cursor(false);
 	os_set_cursor(1, 1);
 	os_display_string("Welcome to the Unofficial Port of Frotz!");

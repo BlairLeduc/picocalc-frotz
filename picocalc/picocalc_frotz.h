@@ -23,12 +23,15 @@
 
 #define SCREEN_WIDTH (40)
 #define SCREEN_HEIGHT (32)
-#define RGB(r,g,b)      ((uint16_t)(((r) >> 3) << 11 | ((g) >> 2) << 5 | ((b) >> 3)))
-#define WHITE_PHOSPHOR  RGB(216, 240, 255)  // white phosphor
-#define GREEN_PHOSPHOR  RGB(51, 255, 102)   // green phosphor
-#define AMBER_PHOSPHOR  RGB(255, 255, 51)   // amber phosphor
-#define BRIGHT_COLOR    RGB(255, 255, 255)  // white
-#define NORMAL_COLOUR   WHITE_PHOSPHOR      // Non-BRIGHT
+
+#define RGB(r,g,b)          ((uint16_t)(((r) >> 3) << 11 | ((g) >> 2) << 5 | ((b) >> 3)))
+#define WHITE_PHOSPHOR      RGB(216, 240, 255)  // white phosphor
+#define GREEN_PHOSPHOR      RGB(51, 255, 51)    // green phosphor
+#define AMBER_PHOSPHOR      RGB(255, 183, 0)    // amber phosphor
+#define DEFAULT_PHOSPHOR    WHITE_PHOSPHOR
+
+#define HISTORY_SIZE 20
+#define HISTORY_LINE_LENGTH 40
 
 /* from ../common/setup.h */
 extern f_setup_t f_setup;
