@@ -305,7 +305,8 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 				}
 				strncpy(buf, history_buffer[history_index], max - 1);
 				buf[max - 1] = 0; // Ensure null-termination
-				length = index = strlen(buf);
+				length = strlen(buf);
+				index = length;
 				lcd_erase_cursor();
 				os_set_cursor(row, col);
 				os_display_string(buf);
