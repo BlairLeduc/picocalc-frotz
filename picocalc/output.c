@@ -68,6 +68,23 @@ void addch(zchar c)
     lcd_move_cursor(cursor_col, cursor_row);
 }
 
+
+void update_lcd_display(int top, int left, int bottom, int right)
+{
+    // Update the LCD display
+    for (int r = top; r <= bottom; r++)
+    {
+        for (int c = left; c <= right; c++)
+        {
+            uint8_t style = screen[r * SCREEN_WIDTH + c] & 0xFF;
+            lcd_set_reverse(style & REVERSE_STYLE);
+            lcd_set_bold(style & BOLDFACE_STYLE);
+            lcd_set_underscore(style & EMPHASIS_STYLE);
+            lcd_putc(c, r, screen[r * SCREEN_WIDTH + c] >> 16);
+        }
+    }
+}
+
 void os_init_sound(void)
 {
     audio_init();
@@ -233,18 +250,7 @@ void os_scroll_area(int top, int left, int bottom, int right, int units)
         }
     }
 
-    // Update the LCD display
-    for (int r = top; r <= bottom; r++)
-    {
-        for (int c = left; c <= right; c++)
-        {
-            uint8_t style = screen[r * SCREEN_WIDTH + c] & 0xFF;
-            lcd_set_reverse(style & REVERSE_STYLE);
-            lcd_set_bold(style & BOLDFACE_STYLE);
-            lcd_set_underscore(style & EMPHASIS_STYLE);
-            lcd_putc(c, r, screen[r * SCREEN_WIDTH + c] >> 16);
-        }
-    }
+    update_lcd_display(top, left, bottom, right);
 }
 
 int os_font_data(int font, int *height, int *width)

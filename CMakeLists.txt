@@ -23,7 +23,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2_w CACHE STRING "Board type")
+set(PICO_BOARD pico CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -87,7 +87,7 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "0.1")
+pico_set_program_version(picocalc-frotz "0.2")
 
 # Generate PIO header
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)

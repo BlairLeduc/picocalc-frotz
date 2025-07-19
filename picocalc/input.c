@@ -13,8 +13,14 @@
 extern f_setup_t f_setup;
 extern int cursor_row, cursor_col;
 extern uint8_t text_style;
+extern void update_lcd_display(int top, int left, int bottom, int right);
 
 volatile bool user_interrupt = FALSE;
+
+char history_buffer[HISTORY_SIZE][HISTORY_LINE_LENGTH] = {0};
+static uint8_t history_head = 0;
+static uint8_t history_tail = 0;
+static uint8_t history_index = 0;
 
 char *dirname(char *path)
 {
@@ -44,6 +50,17 @@ char *dirname(char *path)
 	strncpy(dir, path, len);
 	dir[len] = '\0';
 	return dir;
+}
+
+void history_add(const char *line)
+{
+	strncpy(history_buffer[history_head], line, HISTORY_LINE_LENGTH - 1);
+	history_buffer[history_head][HISTORY_LINE_LENGTH - 1] = '\0';
+	history_head = (history_head + 1) % HISTORY_SIZE;
+	if (history_head == history_tail)
+	{
+		history_tail = (history_tail + 1) % HISTORY_SIZE; // Overwrite oldest
+	}
 }
 
 zchar os_read_key(int timeout, bool show_cursor)
@@ -88,6 +105,8 @@ zchar os_read_key(int timeout, bool show_cursor)
 		return ZC_RETURN;
 	case 0x08:
 		return ZC_BACKSPACE;
+	case KEY_DEL:
+		return KEY_DEL; // DEL key
 	case KEY_ESC:
 		return ZC_ESCAPE;
 	case KEY_UP:
@@ -98,6 +117,10 @@ zchar os_read_key(int timeout, bool show_cursor)
 		return ZC_ARROW_LEFT;
 	case KEY_RIGHT:
 		return ZC_ARROW_RIGHT;
+	case KEY_HOME:
+		return KEY_HOME;
+	case KEY_END:
+		return KEY_END;
 	case KEY_F1:
 		return ZC_FKEY_F1;
 	case KEY_F2:
@@ -126,27 +149,23 @@ zchar os_read_key(int timeout, bool show_cursor)
 zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 {
 	zchar key;
-	int row = cursor_row + 1;
-	int col = cursor_col + 1;
+	int row = cursor_row + 1; // Start position of the input line (row)
+	int col = cursor_col + 1; // Start position of the input line (column)
+	static uint8_t index = 0;
+	static uint16_t phosphor = DEFAULT_PHOSPHOR;
+
+	uint8_t length = strlen(buf);
+	if (length == 0)
+	{
+		index = 0;					  // Reset index if buffer is empty
+		history_index = history_head; // Reset index to the newest entry
+	}
+
+	col -= index; // Adjust start of input field
 
 	lcd_draw_cursor();
 	lcd_enable_cursor(TRUE);
-
-	buf[max - 1] = 0; // Ensure the buffer is null-terminated
-
-	uint8_t index = 0;
-	index = strlen(buf);
-	if (index >= max)
-	{
-		index = max - 1; // Ensure we don't overflow the buffer
-	}
-	if (index > width)
-	{
-		index = width - 1; // Limit to the width of the input line
-	}
-	
-	col -= index;
-	lcd_move_cursor(cursor_col, cursor_row);
+	os_set_cursor(row, col + index);
 
 	absolute_time_t start_time = get_absolute_time();
 	while (1)
@@ -165,16 +184,200 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 		}
 		switch (key)
 		{
+		case '\t': // completion
+			// Handle tab completion
+			char result[24] = {0};
+
+			char saved = buf[index];
+			buf[index] = 0; // Temporarily null-terminate the string
+
+			int completion_result = completion((const zchar *)buf, (zchar *)result);
+			buf[index] = saved; // Restore the character
+
+			int result_length = strlen(result);
+			if (result_length + length > max - 1 || result_length + length > width - 1)
+			{
+				os_beep(1);
+				continue; // Skip if completion is too long
+			}
+			if (completion_result == 0 || completion_result == 1)
+			{
+				if (index == length)
+				{
+					strcat(buf, result);
+					index += result_length;
+					length += result_length;
+					os_display_string(result);
+				}
+				else
+				{
+					memmove(buf + index + result_length, buf + index, length - index + 1);
+					memcpy(buf + index, result, result_length);
+					index += result_length;
+					length += result_length;
+					os_display_string(buf + index - 1); // Redisplay the rest of the line
+					os_set_cursor(row, col + index);
+				}
+			}
+			break;
 		case ZC_BACKSPACE:
 			if (index > 0)
 			{
-				buf[--index] = 0;
+				index--;
+				length--;
 				lcd_erase_cursor();
 				os_set_cursor(row, col + index);
-				os_display_char(' '); // Erase the character
+				if (index == length)
+				{
+					buf[index] = 0;		  // Null-terminate the string
+					os_display_char(' '); // Erase the character
+				}
+				else
+				{
+					memcpy(buf + index, buf + index + 1, length - index + 1);
+					os_display_string(buf + index); // Redisplay the rest of the line
+					os_display_char(' ');			// Clear the rest of the line
+				}
 				os_set_cursor(row, col + index);
 				lcd_draw_cursor(); // Redraw the cursor
 			}
+			break;
+		case KEY_DEL: // DEL key
+			if (index < length)
+			{
+				lcd_erase_cursor();
+				os_set_cursor(row, col + index);
+				memcpy(buf + index, buf + index + 1, length - index + 1);
+				length--;
+				os_display_string(buf + index); // Redisplay the rest of the line
+				os_display_char(' ');			// Clear the rest of the line
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor(); // Redraw the cursor
+			}
+			break;
+		case ZC_ESCAPE: // delete to beginning of line
+			if (index > 0)
+			{
+				lcd_erase_cursor();
+				os_set_cursor(row, col);
+				os_display_string(buf + index); // Redisplay the rest of the line
+				for (int i = index; i < width - 1; i++)
+				{
+					os_display_char(' '); // Clear the rest of the line
+				}
+				index = 0;
+				length = 0;
+				buf[0] = 0; // Reset buffer
+				os_set_cursor(row, col);
+				lcd_draw_cursor(); // Redraw the cursor
+			}
+			break;
+		case KEY_HOME:
+			if (index > 0)
+			{
+				index = 0;
+				lcd_erase_cursor();
+				os_set_cursor(row, col);
+				lcd_draw_cursor(); // Redraw the cursor
+			}
+			break;
+		case KEY_END:
+			if (index < length)
+			{
+				index = length;
+				lcd_erase_cursor();
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor(); // Redraw the cursor
+			}
+			break;
+		case ZC_ARROW_UP:
+			if (history_head != history_tail)
+			{ // history is not empty
+				if (history_index == history_head)
+				{
+					// First time pressing up, go to most recent entry
+					history_index = (history_head + HISTORY_SIZE - 1) % HISTORY_SIZE;
+				}
+				else if (history_index != history_tail)
+				{
+					// Move to the previous entry, wrapping if needed
+					history_index = (history_index + HISTORY_SIZE - 1) % HISTORY_SIZE;
+				}
+				strncpy(buf, history_buffer[history_index], max - 1);
+				buf[max - 1] = 0; // Ensure null-termination
+				length = index = strlen(buf);
+				lcd_erase_cursor();
+				os_set_cursor(row, col);
+				os_display_string(buf);
+				for (int i = index; i < width - 1; i++)
+				{
+					os_display_char(' '); // Clear the rest of the line
+				}
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor();
+			}
+			break;
+		case ZC_ARROW_DOWN:
+			if (history_head != history_tail && history_index != history_head)
+			{
+				// Move to the next entry, wrapping if needed
+				history_index = (history_index + 1) % HISTORY_SIZE;
+				if (history_index == history_head)
+				{
+					// At the newest entry (blank line)
+					buf[0] = 0;
+				}
+				else
+				{
+					strncpy(buf, history_buffer[history_index], max - 1);
+					buf[max - 1] = 0; // Ensure null-termination
+				}
+				length = index = strlen(buf);
+				lcd_erase_cursor();
+				os_set_cursor(row, col);
+				os_display_string(buf);
+				for (int i = index; i < width - 1; i++)
+				{
+					os_display_char(' '); // Clear the rest of the line
+				}
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor();
+			}
+			break;
+		case ZC_ARROW_LEFT:
+			if (index > 0)
+			{
+				index--;
+				lcd_erase_cursor();
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor();
+			}
+			break;
+		case ZC_ARROW_RIGHT:
+			if (index < length)
+			{
+				index++;
+				lcd_erase_cursor();
+				os_set_cursor(row, col + index);
+				lcd_draw_cursor();
+			}
+			break;
+		case ZC_FKEY_F10:
+			// Handle F10 key press
+			if (phosphor == WHITE_PHOSPHOR)
+			{
+				phosphor = GREEN_PHOSPHOR; // Switch to normal colour
+			}
+			else if (phosphor == GREEN_PHOSPHOR)
+			{
+				phosphor = AMBER_PHOSPHOR; // Switch to white phosphor
+			}
+			else if (phosphor == AMBER_PHOSPHOR)
+			{
+				phosphor = WHITE_PHOSPHOR; // Switch back to white phosphor
+			}
+			lcd_set_foreground(phosphor);
+			update_lcd_display(0, 0, z_header.screen_height - 1, z_header.screen_width - 1);
 			break;
 		default:
 			if (is_terminator(key))
@@ -182,14 +385,27 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 				lcd_erase_cursor();
 				lcd_enable_cursor(FALSE);
 
-				buf[index] = 0; // Null-terminate the string
+				history_add((const char *)buf); // Add to history
 				return key;
 			}
-			if (index < max - 1 && index < width - 1)
+			if (key >= 0x20 && key < 0x7F && length < max - 1 && length < width - 1)
 			{
-				buf[index++] = key;
 				lcd_erase_cursor();
-				os_display_char(key);
+				if (index == length)
+				{
+					buf[index++] = key;
+					buf[index] = 0; // Null-terminate the string
+					length++;
+					os_display_char(key);
+				}
+				else
+				{
+					memmove(buf + index + 1, buf + index, length - index + 1);
+					buf[index++] = key;
+					length++;
+					os_display_string(buf + index - 1); // Redisplay the rest of the line
+					os_set_cursor(row, col + index);
+				}
 				lcd_draw_cursor();
 			}
 			else
@@ -200,7 +416,6 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 		}
 	}
 
-	buf[index] = 0; // Null-terminate the string
 	return key;
 }
 
