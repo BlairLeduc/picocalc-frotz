@@ -215,7 +215,7 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 					memcpy(buf + index, result, result_length);
 					index += result_length;
 					length += result_length;
-					os_display_string(buf + index - 1); // Redisplay the rest of the line
+					os_display_string(buf + index - result_length); // Redisplay the rest of the line
 					os_set_cursor(row, col + index);
 				}
 			}
