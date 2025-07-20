@@ -159,7 +159,7 @@ bool select_story(void)
 
 	do
 	{
-		uint8_t battery_level = sb_read_battery();
+		uint8_t battery_level = sb_read_battery() & 0x7F;
 		os_set_cursor(32, 28);
 		snprintf(buffer, sizeof(buffer), "Battery: %u%%", battery_level);
 		os_display_string(buffer);
