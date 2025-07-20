@@ -12,7 +12,7 @@ This project adds a small amount of code to integrate the included modules. Each
 
 - Play Z-Machine games on the PicoCalc
 - Supports the PicoCalc's LCD display, keyboard, audio output and SD card
-- Provides a 40x32 or 64x32 character display with an easy to read font
+- Provides a 40×32 or 64×32 character display with an easy to read font
 - Emulates a phosphor display, with white, green or amber phosphor (F10 to cycle through modes)
 - Full line editing including history and tab completion
 - Store stories on an SD card in the Stories directory (`/Stories`)
