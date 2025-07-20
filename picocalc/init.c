@@ -155,7 +155,7 @@ bool select_story(void)
 		}
 
 		os_set_cursor(7 + num_stories, 1);
-		os_display_string("Select a story, or press W to for width.");
+		os_display_string("Select a story, or press W for width.");
 
 		os_set_cursor(5 + selected, 2);
 		os_set_text_style(REVERSE_STYLE);
