@@ -241,7 +241,7 @@ bool select_story(void)
 
 	selected_story[0] = '\0';
 	show_ext(stories[selected]);
-	strncat(selected_story, "/stories/", sizeof(selected_story) - 1);
+	strncat(selected_story, "/stories/", sizeof(selected_story) - strlen(selected_story) - 1);
 	strncat(selected_story, stories[selected], sizeof(selected_story) - strlen(selected_story) - 1);
 
 	os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
