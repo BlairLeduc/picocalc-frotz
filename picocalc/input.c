@@ -142,6 +142,10 @@ zchar os_read_key(int timeout, bool show_cursor)
 	case KEY_F10:
 		return ZC_FKEY_F10;
 	default:
+		if (key < 0x20 || key >= 0x7F)
+		{
+			return ZC_TIME_OUT; // Invalid key
+		}
 		return (zchar)key; // Return the key as a zchar
 	}
 }
@@ -389,29 +393,32 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 				history_add((const char *)buf); // Add to history
 				return key;
 			}
-			if (key >= 0x20 && key < 0x7F && length < max - 1 && length < width - 1)
+			if (key >= 0x20 && key < 0x7F)
 			{
-				lcd_erase_cursor();
-				if (index == length)
+				if (length < max - 1 && length < width - 1)
 				{
-					buf[index++] = key;
-					buf[index] = 0; // Null-terminate the string
-					length++;
-					os_display_char(key);
+					lcd_erase_cursor();
+					if (index == length)
+					{
+						buf[index++] = key;
+						buf[index] = 0; // Null-terminate the string
+						length++;
+						os_display_char(key);
+					}
+					else
+					{
+						memmove(buf + index + 1, buf + index, length - index + 1);
+						buf[index++] = key;
+						length++;
+						os_display_string(buf + index - 1); // Redisplay the rest of the line
+						os_set_cursor(row, col + index);
+					}
+					lcd_draw_cursor();
 				}
 				else
 				{
-					memmove(buf + index + 1, buf + index, length - index + 1);
-					buf[index++] = key;
-					length++;
-					os_display_string(buf + index - 1); // Redisplay the rest of the line
-					os_set_cursor(row, col + index);
+					os_beep(1); // Beep if buffer is full or width exceeded
 				}
-				lcd_draw_cursor();
-			}
-			else
-			{
-				os_beep(1); // Beep if buffer is full or width exceeded
 			}
 			break;
 		}

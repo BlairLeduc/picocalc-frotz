@@ -87,8 +87,8 @@ bool select_story(void)
 	// For simplicity, we assume the stories are in a directory called "stories"
 	// In a real application, you would use a filesystem API to list files.
 
-	fat32_dir_t dir;
-	fat32_error_t result = fat32_dir_open(&dir, "/Stories");
+	fat32_file_t dir;
+	fat32_error_t result = fat32_open(&dir, "/Stories");
 	if (result != FAT32_OK)
 	{
 		basic_quit("   Error opening /Stories directory!");
@@ -119,7 +119,7 @@ bool select_story(void)
 			}
 		}
 	} while (dir_entry.filename[0]);
-	fat32_dir_close(&dir);
+	fat32_close(&dir);
 
 	if (num_stories == 0)
 	{
@@ -128,7 +128,7 @@ bool select_story(void)
 	else if (num_stories >= 24)
 	{
 		os_set_cursor(32, 1);
-		os_display_string("Only showing the first 24 stories.");
+		os_display_string("Only showing 24 stories.");
 		num_stories = 24;
 	}
 
@@ -159,6 +159,10 @@ bool select_story(void)
 
 	do
 	{
+		uint8_t battery_level = sb_read_battery();
+		os_set_cursor(32, 28);
+		snprintf(buffer, sizeof(buffer), "Battery: %u%%", battery_level);
+		os_display_string(buffer);
 		ch = os_read_key(0, false);
 		os_set_cursor(5 + selected, 2);
 		snprintf(buffer, sizeof(buffer), "%-38s", stories[selected]);
