@@ -45,7 +45,7 @@ char *create_filename(const char *base, const char *extension)
 	return filename;
 }
 
-// Function to compare two strings for sorting storiy names (qsort callback)
+// Function to compare two strings for sorting story names (qsort callback)
 int story_cmp(const void *a, const void *b)
 {
 	const char *sa = (const char *)a;
