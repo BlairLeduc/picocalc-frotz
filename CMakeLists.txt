@@ -74,7 +74,8 @@ add_executable(picocalc-frotz
         modules/picocalc-text-starter/drivers/display.h
         modules/picocalc-text-starter/drivers/fat32.c
         modules/picocalc-text-starter/drivers/fat32.h
-        modules/picocalc-text-starter/drivers/font.c
+        modules/picocalc-text-starter/drivers/font-5x10.c
+        modules/picocalc-text-starter/drivers/font-8x10.c
         modules/picocalc-text-starter/drivers/font.h
         modules/picocalc-text-starter/drivers/keyboard.c
         modules/picocalc-text-starter/drivers/keyboard.h

@@ -9,8 +9,6 @@
 #undef bool
 #include "picocalc_frotz.h"
 
-extern f_setup_t f_setup;
-
 static char latin1_to_ascii[] =
     "    !   c   \x1E   >o< Y   |   S   ''  C   a   <<  not -   R   _   "
     "\x07   \x08   ^2  ^3  '   my  P   .   ,   ^1  \x07   >>  1/4 1/2 3/4 ?   "
@@ -22,15 +20,15 @@ static char latin1_to_ascii[] =
 #define CELL_CH(C) (((C) & 0xFF) << 16)
 #define CELL_STYLE(S) (((S) & 0xFF))
 
-static uint32_t screen[SCREEN_WIDTH * SCREEN_HEIGHT];
+static uint32_t screen[MAX_SCREEN_WIDTH * SCREEN_HEIGHT];
 
 // row and col coordinates for the next character to display
 // This position is always in the valid range of the screen
 int cursor_row = 0, cursor_col = 0;
-uint8_t text_style = 0;
+static uint8_t text_style = 0;
 static uint8_t foreground = 1, background = 0;
 
-void addch(zchar c)
+static void addch(zchar c)
 {
     if (c == ZC_RETURN || c == '\n' || c == '\r')
     {
@@ -53,15 +51,15 @@ void addch(zchar c)
     lcd_putc(cursor_col, cursor_row, c);
 
     // Update the screen buffer
-    screen[cursor_row * SCREEN_WIDTH + cursor_col] = CELL_CH(c) | CELL_STYLE(text_style);
+    screen[cursor_row * columns + cursor_col] = CELL_CH(c) | CELL_STYLE(text_style);
     cursor_col++;
-    if (cursor_col >= SCREEN_WIDTH)
+    if (cursor_col >= columns)
     {
         cursor_col = 0;
         cursor_row++;
         if (cursor_row >= SCREEN_HEIGHT)
         {
-            cursor_col = SCREEN_WIDTH - 1;  // Stay at the last column
+            cursor_col = columns - 1;  // Stay at the last column
             cursor_row = SCREEN_HEIGHT - 1; // Stay at the last row
         }
     }
@@ -76,11 +74,11 @@ void update_lcd_display(int top, int left, int bottom, int right)
     {
         for (int c = left; c <= right; c++)
         {
-            uint8_t style = screen[r * SCREEN_WIDTH + c] & 0xFF;
+            uint8_t style = screen[r * columns + c] & 0xFF;
             lcd_set_reverse(style & REVERSE_STYLE);
             lcd_set_bold(style & BOLDFACE_STYLE);
             lcd_set_underscore(style & EMPHASIS_STYLE);
-            lcd_putc(c, r, screen[r * SCREEN_WIDTH + c] >> 16);
+            lcd_putc(c, r, screen[r * columns + c] >> 16);
         }
     }
 }
@@ -195,17 +193,18 @@ void os_erase_area(int top, int left, int bottom, int right, int UNUSED(win))
     bottom--;
     right--; // Convert to 0-based index
 
+    uint8_t glyph_width = lcd_get_glyph_width();
     lcd_solid_rectangle(
         background,
-        left << 3,
+        left * glyph_width,
         top * GLYPH_HEIGHT,
-        (right - left + 1) << 3,
+        (right - left + 1) * glyph_width,
         (bottom - top + 1) * GLYPH_HEIGHT);
 
     for (int r = top; r <= bottom; r++)
     {
         memset(
-            &screen[r * SCREEN_WIDTH + left],
+            &screen[r * columns + left],
             0x00200000,
             (right - left + 1) * sizeof(uint32_t));
     }
@@ -223,14 +222,14 @@ void os_scroll_area(int top, int left, int bottom, int right, int units)
         // Scroll up (move content up, clear bottom)
         for (int r = top; r <= bottom - units; r++)
         {
-            memcpy(&screen[r * SCREEN_WIDTH + left],
-                   &screen[(r + units) * SCREEN_WIDTH + left],
+            memcpy(&screen[r * columns + left],
+                   &screen[(r + units) * columns + left],
                    (right - left + 1) * sizeof(uint32_t));
         }
         // Clear the bottom area
         for (int r = bottom - units + 1; r <= bottom; r++)
         {
-            memset(&screen[r * SCREEN_WIDTH + left], 0x20000000, (right - left + 1) * sizeof(uint32_t));
+            memset(&screen[r * columns + left], 0x20000000, (right - left + 1) * sizeof(uint32_t));
         }
     }
     else if (units < 0)
@@ -239,14 +238,14 @@ void os_scroll_area(int top, int left, int bottom, int right, int units)
         units = -units;
         for (int r = bottom; r >= top + units; r--)
         {
-            memcpy(&screen[r * SCREEN_WIDTH + left],
-                   &screen[(r - units) * SCREEN_WIDTH + left],
+            memcpy(&screen[r * columns + left],
+                   &screen[(r - units) * columns + left],
                    (right - left + 1) * sizeof(uint32_t));
         }
         // Clear the top area
         for (int r = top; r < top + units; r++)
         {
-            memset(&screen[r * SCREEN_WIDTH + left], 0x20000000, (right - left + 1) * sizeof(uint32_t));
+            memset(&screen[r * columns + left], 0x20000000, (right - left + 1) * sizeof(uint32_t));
         }
     }
 
@@ -331,9 +330,9 @@ void os_set_cursor(int r, int c)
     {
         cursor_row = SCREEN_HEIGHT - 1; // Stay at the last row
     }
-    if (cursor_col >= SCREEN_WIDTH)
+    if (cursor_col >= columns)
     {
-        cursor_col = SCREEN_WIDTH - 1; // Stay at the last column
+        cursor_col = columns - 1; // Stay at the last column
     }
     lcd_move_cursor(cursor_col, cursor_row);
 }

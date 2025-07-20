@@ -20,8 +20,7 @@
 #include <time.h>
 
 #include <sys/param.h>
-
-#define SCREEN_WIDTH (40)
+#define MAX_SCREEN_WIDTH (64) // PicoCalc screen width in characters (maximum)
 #define SCREEN_HEIGHT (32)
 
 #define RGB(r,g,b)          ((uint16_t)(((r) >> 3) << 11 | ((g) >> 2) << 5 | ((b) >> 3)))
@@ -33,26 +32,10 @@
 #define HISTORY_SIZE 20
 #define HISTORY_LINE_LENGTH 40
 
-/* from ../common/setup.h */
-extern f_setup_t f_setup;
+// No os_get_cursor() function in Frotz; we need access to the cursor position
+// for input handling.
+extern int cursor_row, cursor_col;
+extern uint8_t columns; // Number of columns in the display
 
-/* From input.c.  */
-bool is_terminator (zchar);
-
-/* pc-input.c */
-bool pc_handle_setting(const char *setting, bool show_cursor, bool startup);
-void pc_init_input(void);
-
-/* pc-output.c */
-void pc_init_output(void);
-bool pc_output_handle_setting(const char *setting, bool show_cursor, bool startup);
-void pc_show_screen(bool show_cursor);
-void pc_show_prompt(bool show_cursor, char line_type);
-void pc_dump_screen(void);
-void pc_display_user_input(char *);
-void pc_discard_old_input(int num_chars);
-void pc_elide_more_prompt(void);
-void pc_set_picture_cell(int row, int col, zchar c);
-
-/* pc-pic.c */
-bool pc_init_pictures(void);
+// Function prototypes
+void update_lcd_display(int top, int left, int bottom, int right);

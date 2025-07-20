@@ -4,9 +4,6 @@
 
 #include "picocalc_frotz.h"
 
-extern f_setup_t f_setup;
-extern z_header_t z_header;
-
 bool pc_init_pictures(void)
 {
 	return FALSE;

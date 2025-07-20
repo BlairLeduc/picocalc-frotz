@@ -16,11 +16,11 @@
 #undef bool
 #include "picocalc_frotz.h"
 
-extern f_setup_t f_setup;
-extern z_header_t z_header;
+uint8_t columns = 40;
+uint16_t phosphor = DEFAULT_PHOSPHOR; // Default phosphor type
+static char selected_story[64];
 
-char selected_story[64];
-
+// Function to handle system exit
 void _exit(int status)
 {
 	watchdog_reboot(0, 0, 0); // Reboot the device
@@ -28,12 +28,14 @@ void _exit(int status)
 		; // Should never reach here
 }
 
+// Implementation of our own basename function
 char *basename(char *path)
 {
 	const char *base = strrchr(path, '/');
 	return base ? (char *)(base + 1) : (char *)path;
 }
 
+// Function to create a filename with a specific extension
 char *create_filename(const char *base, const char *extension)
 {
 	size_t size = (strlen(base) + strlen(extension) + 1) * sizeof(char);
@@ -43,6 +45,7 @@ char *create_filename(const char *base, const char *extension)
 	return filename;
 }
 
+// Function to compare two strings for sorting storiy names (qsort callback)
 int story_cmp(const void *a, const void *b)
 {
 	const char *sa = (const char *)a;
@@ -50,9 +53,9 @@ int story_cmp(const void *a, const void *b)
 	return strcmp(sa, sb);
 }
 
-void basic_quit(const char* message)
+void basic_quit(const char *message)
 {
-	os_erase_area(1, 1, SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+	os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
 	os_set_cursor(14, 1);
 	os_display_string(message);
 	os_set_cursor(20, 1);
@@ -61,7 +64,6 @@ void basic_quit(const char* message)
 	os_display_string("      turn off your PicoCalc now.");
 	os_read_key(0, false); // Wait for user input before quitting
 	exit(-1);
-
 }
 
 void hide_ext(char *file_name)
@@ -82,10 +84,6 @@ bool select_story(void)
 {
 	char buffer[64];
 	char stories[24][38];
-
-	// list available stories from the filesystem
-	// For simplicity, we assume the stories are in a directory called "stories"
-	// In a real application, you would use a filesystem API to list files.
 
 	fat32_file_t dir;
 	fat32_error_t result = fat32_open(&dir, "/Stories");
@@ -121,78 +119,124 @@ bool select_story(void)
 	} while (dir_entry.filename[0]);
 	fat32_close(&dir);
 
-	if (num_stories == 0)
-	{
-		basic_quit("   No story files found in /Stories.");
-	}
-	else if (num_stories >= 24)
-	{
-		os_set_cursor(32, 1);
-		os_display_string("Only showing 24 stories.");
-		num_stories = 24;
-	}
-
 	// Sort the stories alphabetically
 	qsort(stories, num_stories, sizeof(stories[0]), story_cmp);
-
-	os_set_cursor(3, 1);
-	os_display_string("Available stories:");
-	for (int i = 0; i < num_stories; i++)
-	{
-		os_set_cursor(5 + i, 2);
-		snprintf(buffer, sizeof(buffer), "%-38s", stories[i]);
-		os_display_string(buffer);
-	}
-
-	os_set_cursor(7 + num_stories, 1);
-	os_display_string("Which story would you like to play?");
 
 	char ch = '\0';
 	int count = num_stories - 1;
 	int selected = 0;
-
-	os_set_cursor(5, 2);
-	os_set_text_style(REVERSE_STYLE);
-	snprintf(buffer, sizeof(buffer), "%-38s", stories[selected]);
-	os_display_string(buffer);
-	os_set_text_style(NORMAL_STYLE);
-
 	do
 	{
-		uint8_t battery_level = sb_read_battery() & 0x7F;
-		os_set_cursor(32, 28);
-		snprintf(buffer, sizeof(buffer), "Battery: %u%%", battery_level);
-		os_display_string(buffer);
-		ch = os_read_key(0, false);
-		os_set_cursor(5 + selected, 2);
-		snprintf(buffer, sizeof(buffer), "%-38s", stories[selected]);
-		os_display_string(buffer);
+		os_set_cursor(1, (columns >> 1) - 19);
+		os_display_string("Welcome to the Unofficial Port of Frotz!");
 
-		if (ch == ZC_ARROW_UP)
+		// list available stories from the filesystem
+		// For simplicity, we assume the stories are in a directory called "stories"
+		// In a real application, you would use a filesystem API to list files.
+
+		if (num_stories == 0)
 		{
-			if (selected > 0)
-				selected--;
+			basic_quit("   No story files found in /Stories.");
 		}
-		else if (ch == ZC_ARROW_DOWN)
+		else if (num_stories >= 24)
 		{
-			if (selected < num_stories - 1)
-				selected++;
+			os_set_cursor(32, 1);
+			os_display_string("Only showing 24 stories.");
+			num_stories = 24;
 		}
-		else if (ch == ZC_RETURN)
+
+		os_set_cursor(3, 1);
+		os_display_string("Available stories:");
+		for (int i = 0; i < num_stories; i++)
 		{
-			if (selected >= 0 && selected < num_stories)
-			{
-				strncpy(selected_story, stories[selected], sizeof(selected_story) - 1);
-				selected_story[sizeof(selected_story) - 1] = '\0';
-				break;
-			}
+			os_set_cursor(5 + i, 2);
+			snprintf(buffer, sizeof(buffer), columns == 40 ? "%-38s" : "%-62s", stories[i]);
+			os_display_string(buffer);
 		}
+
+		os_set_cursor(7 + num_stories, 1);
+		os_display_string("Select a story, or press W to for width.");
 
 		os_set_cursor(5 + selected, 2);
 		os_set_text_style(REVERSE_STYLE);
-		snprintf(buffer, sizeof(buffer), "%-38s", stories[selected]);
+		snprintf(buffer, sizeof(buffer), columns == 40 ? "%-38s" : "%-62s", stories[selected]);
 		os_display_string(buffer);
 		os_set_text_style(NORMAL_STYLE);
+
+		do
+		{
+			uint8_t battery_level = sb_read_battery() & 0x7F;
+			os_set_cursor(32, columns - 12);
+			snprintf(buffer, sizeof(buffer), "Battery: %u%%", battery_level);
+			os_display_string(buffer);
+			ch = os_read_key(0, false);
+			os_set_cursor(5 + selected, 2);
+			snprintf(buffer, sizeof(buffer), columns == 40 ? "%-38s" : "%-62s", stories[selected]);
+			os_display_string(buffer);
+
+			if (ch == ZC_ARROW_UP)
+			{
+				if (selected > 0)
+					selected--;
+			}
+			else if (ch == ZC_ARROW_DOWN)
+			{
+				if (selected < num_stories - 1)
+					selected++;
+			}
+			else if (ch == ZC_FKEY_F10)
+			{
+				// Handle F10 key press
+				if (phosphor == WHITE_PHOSPHOR)
+				{
+					phosphor = GREEN_PHOSPHOR; // Switch to normal colour
+				}
+				else if (phosphor == GREEN_PHOSPHOR)
+				{
+					phosphor = AMBER_PHOSPHOR; // Switch to white phosphor
+				}
+				else if (phosphor == AMBER_PHOSPHOR)
+				{
+					phosphor = WHITE_PHOSPHOR; // Switch back to white phosphor
+				}
+				lcd_set_foreground(phosphor);
+				break;
+			}
+
+			else if (ch == ZC_RETURN)
+			{
+				if (selected >= 0 && selected < num_stories)
+				{
+					strncpy(selected_story, stories[selected], sizeof(selected_story) - 1);
+					selected_story[sizeof(selected_story) - 1] = '\0';
+					break;
+				}
+			}
+			else if (ch == 'w' || ch == 'W')
+			{
+				if (lcd_get_columns() == 40)
+				{
+					// switch to 64 columns
+					columns = 64;
+					lcd_set_font(&font_5x10);
+					os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
+				}
+				else
+				{
+					// switch to 40 columns
+					columns = 40;
+					lcd_set_font(&font_8x10);
+					os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
+				}
+				break;
+			}
+
+			os_set_cursor(5 + selected, 2);
+			os_set_text_style(REVERSE_STYLE);
+			snprintf(buffer, sizeof(buffer), columns == 40 ? "%-38s" : "%-62s", stories[selected]);
+			os_display_string(buffer);
+			os_set_text_style(NORMAL_STYLE);
+		} while (ch != ZC_RETURN);
 	} while (ch != ZC_RETURN);
 
 	selected_story[0] = '\0';
@@ -200,7 +244,7 @@ bool select_story(void)
 	strncat(selected_story, "/stories/", sizeof(selected_story) - 1);
 	strncat(selected_story, stories[selected], sizeof(selected_story) - strlen(selected_story) - 1);
 
-	os_erase_area(1, 1, SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+	os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
 	os_set_cursor(1, 1);
 	return TRUE;
 }
@@ -261,8 +305,12 @@ void os_init_screen(void)
 	}
 
 	z_header.screen_rows = SCREEN_HEIGHT;
-	z_header.screen_cols = SCREEN_WIDTH;
-	z_header.config |= CONFIG_BOLDFACE | CONFIG_EMPHASIS;
+	z_header.screen_cols = columns;
+	z_header.config |= CONFIG_EMPHASIS;
+	if (columns == 40)
+	{
+		z_header.config |= CONFIG_BOLDFACE;
+	}
 	z_header.screen_height = z_header.screen_rows;
 	z_header.screen_width = z_header.screen_cols;
 	z_header.font_width = 1;
@@ -273,8 +321,8 @@ void os_init_screen(void)
 	if (f_setup.interpreter_number == INTERP_DEFAULT)
 	{
 		z_header.interpreter_number = z_header.version == 6
-			? INTERP_MSDOS
-			: INTERP_DEC_20;
+										  ? INTERP_MSDOS
+										  : INTERP_DEC_20;
 	}
 	else
 	{
@@ -380,12 +428,10 @@ void os_init_setup(void)
 
 	lcd_set_foreground(DEFAULT_PHOSPHOR);
 	lcd_enable_cursor(false);
-	os_set_cursor(1, 1);
-	os_display_string("Welcome to the Unofficial Port of Frotz!");
 
 	if (!select_story())
 	{
-		os_erase_area(1, 1, SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+		os_erase_area(1, 1, SCREEN_HEIGHT, columns, 0);
 		os_set_cursor(1, 1);
 		os_display_string("No story selected!");
 		os_set_cursor(3, 1);

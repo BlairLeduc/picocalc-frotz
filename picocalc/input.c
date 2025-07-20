@@ -10,14 +10,9 @@
 #undef bool
 #include "picocalc_frotz.h"
 
-extern f_setup_t f_setup;
-extern int cursor_row, cursor_col;
-extern uint8_t text_style;
-extern void update_lcd_display(int top, int left, int bottom, int right);
-
 volatile bool user_interrupt = FALSE;
 
-char history_buffer[HISTORY_SIZE][HISTORY_LINE_LENGTH] = {0};
+static char history_buffer[HISTORY_SIZE][HISTORY_LINE_LENGTH] = {0};
 static uint8_t history_head = 0;
 static uint8_t history_tail = 0;
 static uint8_t history_index = 0;
@@ -578,7 +573,7 @@ char *os_read_file_name(const char *default_name, int flag)
 
 void os_more_prompt(void)
 {
-	uint8_t saved_style = text_style;
+	uint8_t saved_style = os_get_text_style();
 	int saved_row = cursor_row + 1;
 	int saved_col = cursor_col + 1;
 
