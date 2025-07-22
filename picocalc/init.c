@@ -258,7 +258,7 @@ void os_process_arguments(int UNUSED(argc), char *UNUSED(argv[]))
 {
 	char *p;
 
-	f_setup.undo_slots = 2;
+	f_setup.undo_slots = 20;
 	f_setup.format = FORMAT_ANSI;
 
 	// Save the story file name

@@ -93,13 +93,13 @@ void os_beep(int number)
     switch (number)
     {
     case 1: // High beep
-        audio_play_sound_blocking(PITCH_A5, PITCH_A5, NOTE_QUARTER);
+        audio_play_sound_blocking(PITCH_A5, PITCH_A5, NOTE_EIGHTH);
         break;
     case 2: // Low beep
-        audio_play_sound_blocking(PITCH_A3, PITCH_A3, NOTE_QUARTER);
+        audio_play_sound_blocking(PITCH_A3, PITCH_A3, NOTE_EIGHTH);
         break;
     default: // Default beep
-        audio_play_sound_blocking(PITCH_A4, PITCH_A4, NOTE_QUARTER);
+        audio_play_sound_blocking(PITCH_A4, PITCH_A4, NOTE_EIGHTH);
         break;
     }
 }

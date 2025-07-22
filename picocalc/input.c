@@ -102,6 +102,8 @@ zchar os_read_key(int timeout, bool show_cursor)
 		return ZC_RETURN;
 	case 0x08:
 		return ZC_BACKSPACE;
+	case 0x09: // Tab key
+		return 0x09;
 	case KEY_DEL:
 		return KEY_DEL; // DEL key
 	case KEY_ESC:
