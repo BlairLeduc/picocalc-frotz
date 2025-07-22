@@ -67,6 +67,10 @@ add_executable(picocalc-frotz
         modules/frotz/src/common/table.c
         modules/frotz/src/common/text.c
         modules/frotz/src/common/variable.c
+        modules/iniparser/src/dictionary.c
+        modules/iniparser/src/dictionary.h
+        modules/iniparser/src/iniparser.c
+        modules/iniparser/src/iniparser.h
         modules/picocalc-text-starter/drivers/audio.c
         modules/picocalc-text-starter/drivers/audio.h
         modules/picocalc-text-starter/drivers/clib.c
@@ -88,14 +92,13 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "0.3")
+pico_set_program_version(picocalc-frotz "0.4")
 
 # Generate PIO header
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)
 
 # Enable the use of the ROSC for random number generation
 target_compile_definitions(picocalc-frotz PRIVATE
-    PICO_RAND_ENTROPY_SRC_ROSC=1
     PICO_STACK_SIZE=4096 # 16 KB stack size
     )
 
@@ -119,7 +122,7 @@ target_link_libraries(picocalc-frotz
 target_include_directories(picocalc-frotz PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/modules/frotz/src/common
-        ${CMAKE_CURRENT_LIST_DIR}/modules/frotz/src/blorb
+        ${CMAKE_CURRENT_LIST_DIR}/modules/iniparser/src
         ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers
 )
 
