@@ -504,5 +504,7 @@ void os_init_setup(void)
 		const char *width_setting = iniparser_getstring(ini, key, NULL);
 
 		configure_display(phosphor_setting, width_setting);
+
+		iniparser_freedict(ini);
 	}
 }
