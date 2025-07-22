@@ -2,10 +2,15 @@
 // init.c - PicoCalc interface, initialization
 //
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
 #include "pico/rand.h"
+
+#include "iniparser.h"
 
 #include "audio.h"
 #include "fat32.h"
@@ -418,6 +423,45 @@ int os_storyfile_tell(FILE *fp)
 	return ftell(fp);
 }
 
+void configure_display(const char *phosphor_setting, const char *width_setting)
+{
+	if (phosphor_setting != NULL)
+	{
+		if (strcmp(phosphor_setting, "white") == 0)
+		{
+			phosphor = WHITE_PHOSPHOR;
+		}
+		else if (strcmp(phosphor_setting, "green") == 0)
+		{
+			phosphor = GREEN_PHOSPHOR;
+		}
+		else if (strcmp(phosphor_setting, "amber") == 0)
+		{
+			phosphor = AMBER_PHOSPHOR;
+		}
+		else
+		{
+			phosphor = DEFAULT_PHOSPHOR; // Fallback to default
+		}
+
+		lcd_set_foreground(phosphor); // Fallback to default
+	}
+
+	if (width_setting != NULL)
+	{
+		if (strcmp(width_setting, "64") == 0)
+		{
+			columns = 64;
+			lcd_set_font(&font_5x10);
+		}
+		else
+		{
+			columns = 40;
+			lcd_set_font(&font_8x10);
+		}
+	}
+}
+
 void os_init_setup(void)
 {
 	sb_init();
@@ -426,8 +470,17 @@ void os_init_setup(void)
 	audio_init();
 	fat32_init();
 
-	lcd_set_foreground(DEFAULT_PHOSPHOR);
 	lcd_enable_cursor(false);
+
+	dictionary *ini = iniparser_load("/Stories/settings.ini");
+	if (ini != NULL)
+	{
+		// Load settings from the INI file
+		const char *phosphor_setting = iniparser_getstring(ini, "default:phosphor", "white");
+		const char *width_setting = iniparser_getstring(ini, "default:columns", "40");
+
+		configure_display(phosphor_setting, width_setting);
+	}
 
 	if (!select_story())
 	{
@@ -436,5 +489,20 @@ void os_init_setup(void)
 		os_display_string("No story selected!");
 		os_set_cursor(3, 1);
 		os_quit(EXIT_FAILURE);
+	}
+
+	if (ini != NULL)
+	{
+		// Override settings selected by the user to the story-specific settings
+		char key[FAT32_MAX_PATH_LEN] = {0};
+		char *story_filename = basename(selected_story);
+
+		snprintf(key, sizeof(key), "%s:phosphor", story_filename);
+		const char *phosphor_setting = iniparser_getstring(ini, key, NULL);
+
+		snprintf(key, sizeof(key), "%s:columns", story_filename);
+		const char *width_setting = iniparser_getstring(ini, key, NULL);
+
+		configure_display(phosphor_setting, width_setting);
 	}
 }

@@ -10,6 +10,8 @@
 #undef bool
 #include "picocalc_frotz.h"
 
+extern uint16_t phosphor;
+
 volatile bool user_interrupt = FALSE;
 
 static char history_buffer[HISTORY_SIZE][HISTORY_LINE_LENGTH] = {0};
@@ -151,7 +153,6 @@ zchar os_read_line(int max, zchar *buf, int timeout, int width, int continued)
 	int row = cursor_row + 1; // Start position of the input line (row)
 	int col = cursor_col + 1; // Start position of the input line (column)
 	static uint8_t index = 0;
-	static uint16_t phosphor = DEFAULT_PHOSPHOR;
 
 	uint8_t length = strlen(buf);
 	if (length == 0)
