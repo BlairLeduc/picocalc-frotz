@@ -577,7 +577,7 @@ char *os_read_file_name(const char *default_name, int flag)
 		{
 			strncat(file_name, path_separator, FAT32_MAX_PATH_LEN - strlen(file_name) - 2);
 		}
-		strncat(file_name, tempname, strlen(file_name) - strlen(tempname) - 1);
+		strncat(file_name, tempname, FAT32_MAX_PATH_LEN - strlen(file_name) - 1);
 	}
 
 	ext = strrchr(file_name, '.');
