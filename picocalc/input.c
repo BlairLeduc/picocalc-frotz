@@ -511,7 +511,6 @@ char *os_read_file_name(const char *default_name, int flag)
 								print_string("\n");
 								if (++count % (z_header.screen_rows - 1) == 0)
 								{
-									count++;		  // Increment count for the next line
 									os_more_prompt(); // Pause every 24 entries
 								}
 							}
