@@ -501,7 +501,7 @@ char *os_read_file_name(const char *default_name, int flag)
 						{
 							if (dir_entry.attr & (FAT32_ATTR_VOLUME_ID | FAT32_ATTR_HIDDEN | FAT32_ATTR_SYSTEM | FAT32_ATTR_DIRECTORY))
 							{
-								// It's a volume label, hidden file, or system file, skip it
+								// It's a volume label, hidden file, directory, or system file, skip it
 								continue;
 							}
 							else
