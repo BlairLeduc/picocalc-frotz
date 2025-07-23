@@ -9,6 +9,7 @@
 
 #undef bool
 #include "picocalc_frotz.h"
+#include <fat32.h>
 
 extern uint16_t phosphor;
 
@@ -432,7 +433,8 @@ char *os_read_file_name(const char *default_name, int flag)
 	char *tempname;
 	zchar answer[4];
 	char path_separator[2];
-	char file_name[MAX_FILE_NAME + 1];
+	char file_name[FAT32_MAX_PATH_LEN + 1];
+	char buffer[64];
 	char *ext;
 
 	path_separator[0] = PATH_SEPARATOR;
@@ -446,25 +448,81 @@ char *os_read_file_name(const char *default_name, int flag)
 	}
 	else
 	{
-		print_string("Enter a file name.\nDefault is \"");
-
-		// After successfully reading or writing a file, the default
-		// name gets saved and used again the next time something is
-		// to be read or written.  In restricted mode, we don't want
-		// to show any path prepended to the actual file name.  Here,
-		// we strip out that path and display only the filename.
-		if (f_setup.restricted_path != NULL)
+		do
 		{
-			tempname = basename((char *)default_name);
-			print_string(tempname);
-		}
-		else
-		{
-			print_string(default_name);
-		}
-		print_string("\":\n");
+			print_string("Enter a file name.\nDefault is \"");
 
-		read_string(MAX_FILE_NAME - EXT_LENGTH, (zchar *)file_name);
+			// After successfully reading or writing a file, the default
+			// name gets saved and used again the next time something is
+			// to be read or written.  In restricted mode, we don't want
+			// to show any path prepended to the actual file name.  Here,
+			// we strip out that path and display only the filename.
+			if (f_setup.restricted_path != NULL)
+			{
+				tempname = basename((char *)default_name);
+				print_string(tempname);
+			}
+			else
+			{
+				print_string(default_name);
+			}
+			print_string("\" (? for list):\n");
+
+			read_string(FAT32_MAX_PATH_LEN - EXT_LENGTH, (zchar *)file_name);
+
+			// If the user entered '?', show the list of files
+			if (file_name[0] == '?')
+			{
+				char *dirname = f_setup.restricted_path ? f_setup.restricted_path : "/";
+
+				fat32_file_t dir;
+				fat32_entry_t dir_entry;
+
+				fat32_error_t result = fat32_open(&dir, dirname);
+				if (result != FAT32_OK)
+				{
+					snprintf(buffer, sizeof(buffer), "Error opening directory %s: %s", dirname, fat32_error_string(result));
+					print_string(buffer);
+				}
+				else
+				{
+					int count = 0;
+					print_string("Saved games:\n");
+					do
+					{
+						result = fat32_dir_read(&dir, &dir_entry);
+						if (result != FAT32_OK)
+						{
+							snprintf(buffer, sizeof(buffer), "Error reading directory: %s", fat32_error_string(result));
+							print_string(buffer);
+							break;
+						}
+						if (dir_entry.filename[0])
+						{
+							if (dir_entry.attr & (FAT32_ATTR_VOLUME_ID | FAT32_ATTR_HIDDEN | FAT32_ATTR_SYSTEM | FAT32_ATTR_DIRECTORY))
+							{
+								// It's a volume label, hidden file, or system file, skip it
+								continue;
+							}
+							else
+							{
+								// It's a directory, append '/' to the name
+								print_string(dir_entry.filename);
+								print_string("\n");
+								if (++count % (z_header.screen_rows - 1) == 0)
+								{
+									count++;		  // Increment count for the next line
+									os_more_prompt(); // Pause every 24 entries
+								}
+							}
+						}
+					} while (dir_entry.filename[0]);
+
+					fat32_close(&dir);
+					print_string("\n");
+				}
+			}
+		} while (file_name[0] == '?');
 	}
 
 	// Return failure if path provided when in restricted mode.
@@ -474,7 +532,9 @@ char *os_read_file_name(const char *default_name, int flag)
 	{
 		tempname = dirname(file_name);
 		if (strlen(tempname) > 1)
+		{
 			return NULL;
+		}
 	}
 
 	// Use the default name if nothing was typed
@@ -487,10 +547,12 @@ char *os_read_file_name(const char *default_name, int flag)
 		if (flag == FILE_NO_PROMPT && f_setup.restricted_path == NULL)
 		{
 			tempname = basename((char *)default_name);
-			strncpy(file_name, tempname, MAX_FILE_NAME);
+			strncpy(file_name, tempname, FAT32_MAX_PATH_LEN);
 		}
 		else
-			strncpy(file_name, default_name, MAX_FILE_NAME);
+		{
+			strncpy(file_name, default_name, FAT32_MAX_PATH_LEN);
+		}
 	}
 
 	// If we're restricted to one directory, strip any leading path left
@@ -509,12 +571,12 @@ char *os_read_file_name(const char *default_name, int flag)
 			}
 		}
 		tempname = strdup(file_name + i);
-		strncpy(file_name, f_setup.restricted_path, MAX_FILE_NAME);
+		strncpy(file_name, f_setup.restricted_path, FAT32_MAX_PATH_LEN);
 
 		// Make sure the final character is the path separator.
 		if (file_name[strlen(file_name) - 1] != PATH_SEPARATOR)
 		{
-			strncat(file_name, path_separator, MAX_FILE_NAME - strlen(file_name) - 2);
+			strncat(file_name, path_separator, FAT32_MAX_PATH_LEN - strlen(file_name) - 2);
 		}
 		strncat(file_name, tempname, strlen(file_name) - strlen(tempname) - 1);
 	}

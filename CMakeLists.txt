@@ -99,7 +99,7 @@ pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picoca
 
 # Enable the use of the ROSC for random number generation
 target_compile_definitions(picocalc-frotz PRIVATE
-    PICO_STACK_SIZE=4096 # 16 KB stack size
+    PICO_STACK_SIZE=2048 # 8 KB stack size
     )
 
 # Modify the below lines to enable/disable output over UART/USB

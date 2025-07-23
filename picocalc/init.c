@@ -23,7 +23,8 @@
 
 uint8_t columns = 40;
 uint16_t phosphor = DEFAULT_PHOSPHOR; // Default phosphor type
-static char selected_story[64];
+static char selected_story[FAT32_MAX_PATH_LEN] = {0}; // Selected story name
+static char save_path[FAT32_MAX_PATH_LEN] = "/Stories/saves"; // Default save path
 
 // Function to handle system exit
 void _exit(int status)
@@ -265,6 +266,8 @@ void os_process_arguments(int UNUSED(argc), char *UNUSED(argv[]))
 	f_setup.story_file = strdup((char *)selected_story);
 	f_setup.story_name = strdup(basename((char *)selected_story));
 
+	f_setup.restricted_path = save_path; // Set the restricted path for file operations
+
 	// Now strip off the extension
 	p = strrchr(f_setup.story_name, '.');
 	if (p != NULL)
@@ -478,6 +481,7 @@ void os_init_setup(void)
 		// Load settings from the INI file
 		const char *phosphor_setting = iniparser_getstring(ini, "default:phosphor", "white");
 		const char *width_setting = iniparser_getstring(ini, "default:columns", "40");
+		const char *save_path = iniparser_getstring(ini, "default:savepath", "/Stories/saves");
 
 		configure_display(phosphor_setting, width_setting);
 	}
@@ -503,7 +507,12 @@ void os_init_setup(void)
 		snprintf(key, sizeof(key), "%s:columns", story_filename);
 		const char *width_setting = iniparser_getstring(ini, key, NULL);
 
+		snprintf(key, sizeof(key), "%s:savepath", story_filename);
+		const char *save_path_setting = iniparser_getstring(ini, key, save_path);
+
 		configure_display(phosphor_setting, width_setting);
+		strncpy(save_path, save_path_setting, sizeof(save_path) - 1);
+		save_path[sizeof(save_path) - 1] = '\0'; // Ensure null-termination	
 
 		iniparser_freedict(ini);
 	}
