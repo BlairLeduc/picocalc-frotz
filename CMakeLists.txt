@@ -92,7 +92,7 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "0.4")
+pico_set_program_version(picocalc-frotz "0.5")
 
 # Generate PIO header
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)
