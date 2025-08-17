@@ -15,9 +15,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.1.1)
+set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
-set(picotoolVersion 2.1.1)
+set(picotoolVersion 2.2.0)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -92,7 +92,7 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "0.5")
+pico_set_program_version(picocalc-frotz "0.6")
 
 # Generate PIO header
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)
