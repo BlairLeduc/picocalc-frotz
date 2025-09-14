@@ -1,0 +1,3 @@
+#pragma once
+
+#define PICOCALC_FROTZ_VERSION "@PICOCALC_FROTZ_VERSION@"
