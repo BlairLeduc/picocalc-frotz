@@ -379,7 +379,7 @@ story_t *select_story(config_t *config)
 		}
 		else if (ch == KEY_PAGE_DOWN)
 		{
-			if (page_start + CONFIG_MAX_STORIES_PER_SCREEN < config->story_count - 1)
+			if (page_start + CONFIG_MAX_STORIES_PER_SCREEN <= config->story_count - CONFIG_MAX_STORIES_PER_SCREEN)
 			{
 				page_start += CONFIG_MAX_STORIES_PER_SCREEN;
 				selected = page_start;
