@@ -110,12 +110,12 @@ static void update_settings_display(int top, int selected, story_t *story, uint3
 
 	if (is_small_font)
 	{
-		lcd_putstr(56, top + 4, "Small   ");
+		lcd_putstr(56, top + 7, "Small   ");
 	}
 	else
 	{
 		lcd_set_font(&font_8x10);
-		lcd_putstr(35, top + 4, "Large");
+		lcd_putstr(35, top + 7, "Large");
 		lcd_set_font(&font_5x10);
 	}
 
@@ -127,17 +127,17 @@ static void update_settings_display(int top, int selected, story_t *story, uint3
 	if (phosphor_setting == SETTINGS_PHOSPHOR_GREEN)
 	{
 		lcd_set_foreground(GREEN_PHOSPHOR);
-		lcd_putstr(56, top + 6, "Green");
+		lcd_putstr(56, top + 9, "Green");
 	}
 	else if (phosphor_setting == SETTINGS_PHOSPHOR_AMBER)
 	{
 		lcd_set_foreground(AMBER_PHOSPHOR);
-		lcd_putstr(56, top + 6, "Amber");
+		lcd_putstr(56, top + 9, "Amber");
 	}
 	else
 	{
 		lcd_set_foreground(WHITE_PHOSPHOR);
-		lcd_putstr(56, top + 6, "White");
+		lcd_putstr(56, top + 9, "White");
 	}
 	lcd_set_foreground(FOREGROUND_COLOUR);
 }
@@ -323,15 +323,14 @@ story_t *select_story(config_t *config)
 
 	// Place the settings text
 	lcd_set_font(&font_5x10);
-	lcd_putstr(46, top + 2, "Settings");
 	lcd_set_underscore(true);
-	lcd_putc(46, top + 4, 'F');
-	lcd_putc(46, top + 6, 'P');
-	lcd_putstr(46, top + 8, "Enter");
+	lcd_putc(46, top + 7, 'F');
+	lcd_putc(46, top + 9, 'P');
+	lcd_putstr(46, top + 11, "Enter");
 	lcd_set_underscore(false);
-	lcd_putstr(47, top + 4, "ont:");
-	lcd_putstr(47, top + 6, "hosphor:");
-	lcd_putstr(52, top + 8, "to start");
+	lcd_putstr(47, top + 7, "ont:");
+	lcd_putstr(47, top + 9, "hosphor:");
+	lcd_putstr(52, top + 11, "to start");
 
 	// Initial display of settings
 	update_settings_display(top, selected, &config->stories[selected], config->defaults);
