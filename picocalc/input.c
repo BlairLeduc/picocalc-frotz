@@ -121,6 +121,10 @@ zchar os_read_key(int timeout, bool show_cursor)
 		return KEY_HOME;
 	case KEY_END:
 		return KEY_END;
+	case KEY_PAGE_UP:
+		return KEY_PAGE_UP;
+	case KEY_PAGE_DOWN:
+		return KEY_PAGE_DOWN;
 	case KEY_F1:
 		return ZC_FKEY_F1;
 	case KEY_F2:

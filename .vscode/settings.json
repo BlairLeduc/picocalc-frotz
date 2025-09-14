@@ -59,7 +59,10 @@
         "streambuf": "c",
         "tuple": "c",
         "utility": "c",
-        "variant": "c"
+        "variant": "c",
+        "compare": "cpp",
+        "cstdint": "cpp",
+        "status_led.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": true
 }

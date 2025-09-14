@@ -24,6 +24,7 @@ if (EXISTS ${picoVscode})
 endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICOCALC_FROTZ_VERSION "1.0" CACHE STRING "PicoCalc Frotz version")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -67,10 +68,7 @@ add_executable(picocalc-frotz
         modules/frotz/src/common/table.c
         modules/frotz/src/common/text.c
         modules/frotz/src/common/variable.c
-        modules/iniparser/src/dictionary.c
-        modules/iniparser/src/dictionary.h
-        modules/iniparser/src/iniparser.c
-        modules/iniparser/src/iniparser.h
+        modules/inih/ini.c
         modules/picocalc-text-starter/drivers/audio.c
         modules/picocalc-text-starter/drivers/audio.h
         modules/picocalc-text-starter/drivers/clib.c
@@ -92,7 +90,9 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "0.6")
+pico_set_program_version(picocalc-frotz "${PICOCALC_FROTZ_VERSION}")
+pico_set_program_url(picocalc-frotz "https://github.com/BlairLeduc/picocalc-frotz")
+pico_set_program_description(picocalc-frotz "An unofficial port of Frotz to the PicoCalc")
 
 # Generate PIO header
 pico_generate_pio_header(picocalc-frotz ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers/audio.pio)
@@ -105,6 +105,12 @@ target_compile_definitions(picocalc-frotz PRIVATE
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(picocalc-frotz 0)
 pico_enable_stdio_usb(picocalc-frotz 0)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.h
+    @ONLY
+)
 
 # Add the standard library to the build
 target_link_libraries(picocalc-frotz
@@ -122,7 +128,7 @@ target_link_libraries(picocalc-frotz
 target_include_directories(picocalc-frotz PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/modules/frotz/src/common
-        ${CMAKE_CURRENT_LIST_DIR}/modules/iniparser/src
+        ${CMAKE_CURRENT_LIST_DIR}/modules/inih
         ${CMAKE_CURRENT_LIST_DIR}/modules/picocalc-text-starter/drivers
 )
 

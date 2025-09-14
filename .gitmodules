@@ -4,6 +4,6 @@
 [submodule "modules/frotz"]
 	path = modules/frotz
 	url = https://gitlab.com/DavidGriffith/frotz.git
-[submodule "modules/iniparser"]
-	path = modules/iniparser
-	url = https://gitlab.com/iniparser/iniparser.git
+[submodule "modules/inih"]
+	path = modules/inih
+	url = https://github.com/benhoyt/inih.git
