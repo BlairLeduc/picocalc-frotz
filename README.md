@@ -33,7 +33,7 @@ A simple story selector is presented when you turn on the PicoCalc. This lists t
 You may also change the number of columns and phosphor colour. Whilst you can change the phosphor colour at any time during gameplay, the number of columns is set when you select the story and cannot be changed until you restart the story. The settings are saved in the `settings.ini` file in the `/Stories` directory when you start a story.
 
 > [!NOTE]
-> The story selector will only show stories that are in the `/Stories` directory and is limited to 128 stories.
+> The story selector will only show stories that are in the `/Stories` directory and is limited to 256 stories.
 
 > [!TIP]
 >A Pico 2 (W) or other RP2350-based device is recommended. The stories are loaded from the SD card into RAM. The RP2350-based boards have 520 KiB of RAM over the RP2040's 264 KiB, which allows for larger stories to be loaded.

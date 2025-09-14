@@ -284,7 +284,7 @@ void story_page(config_t *config, int top, int page_start, int selected)
 
 		if (i + page_start < config->story_count)
 		{
-			memcpy(buffer, config->stories[i + page_start].story_filename, MIN(strlen(config->stories[i + page_start].story_filename), 27));
+			memcpy(buffer, config->stories[i + page_start].story_filename, MIN(strlen(config->stories[i + page_start].story_filename), MAX_DISPLAY_FILENAME_LEN));
 		}
 		lcd_putstr(0, top + i, buffer);
 	}
@@ -300,13 +300,13 @@ story_t *select_story(config_t *config)
 	int top = 10;
 
 	// Prepare the selection templates
-	for (int i = 0; i < 27; i++)
+	for (int i = 0; i < MAX_DISPLAY_FILENAME_LEN; i++)
 	{
 		selected_template[i] = '\x12';
 		normal_template[i] = '\x20';
 	}
-	selected_template[27] = '\x16';
-	normal_template[27] = '\x19';
+	selected_template[MAX_DISPLAY_FILENAME_LEN] = '\x16';
+	normal_template[MAX_DISPLAY_FILENAME_LEN] = '\x19';
 
 	// Display the banner
 	lcd_clear_screen();
@@ -349,7 +349,7 @@ story_t *select_story(config_t *config)
 		// Redraw the previously selected story in normal style
 		lcd_set_font(&font_8x10);
 		strncpy(buffer, normal_template, sizeof(buffer) - 1);
-		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), 27));
+		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), MAX_DISPLAY_FILENAME_LEN));
 		lcd_putstr(0, top + selected - page_start, buffer);
 
 		if (ch == ZC_ARROW_UP)
@@ -439,7 +439,7 @@ story_t *select_story(config_t *config)
 		lcd_set_font(&font_8x10);
 
 		strncpy(buffer, selected_template, sizeof(buffer) - 1);
-		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), 27));
+		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), MAX_DISPLAY_FILENAME_LEN));
 		lcd_putstr(0, top + selected - page_start, buffer);
 
 		// Redraw the newly selected story in selected style
@@ -664,7 +664,7 @@ void os_init_setup(void)
 						sizeof(config.stories[config.story_count].story_filename) - 1);
 					hide_ext(config.stories[config.story_count].story_filename);
 					config.story_count++;
-					if (config.story_count >= MAX_NUM_STORIES)
+					if (config.story_count >= CONFIG_MAX_STORIES)
 					{
 						break; // Limit to MAX_NUM_STORIES
 					}
