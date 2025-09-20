@@ -48,8 +48,8 @@ Please try to create bug reports that are:
    that relate to your submission. You don't want to duplicate effort.
 2. Fork the project
 3. Create your feature branch (`git switch -c feature/amazing_feature`)
-5. Commit your changes (`git commit -m 'Add this amazing_feature'`). Commit messages must
-   use the imperative. The message needs to complete this sentence:
+4. Commit your changes (`git commit -m 'Add this amazing_feature'`). Commit messages must
+   use the imparative. The message needs to complete this sentence:
    "If applied, this commit will..."
-7. Push to the branch (`git push origin feature/amazing_feature`)
-8. [Open a Pull Request](https://github.com/BlairLeduc/picocalc-frotz/compare?expand=1)
+5. Push to the branch (`git push origin feature/amazing_feature`)
+6. [Open a Pull Request](https://github.com/BlairLeduc/picocalc-frotz/compare?expand=1)
