@@ -20,6 +20,10 @@ static char latin1_to_ascii[] =
 #define CELL_CH(C) (((C) & 0xFF) << 16)
 #define CELL_STYLE(S) (((S) & 0xFF))
 
+#define ASCII_ARROW_UP        (0x81)
+#define ASCII_ARROW_DOWN      (0x80)
+
+
 static uint32_t screen[MAX_SCREEN_WIDTH * SCREEN_HEIGHT];
 
 // row and col coordinates for the next character to display
@@ -42,7 +46,7 @@ static void addch(zchar c)
         return;
     }
 
-    if (c > 0x7F)
+    if (c > 0x81)
     {
         c = 0x02; // Replace non-ASCII characters with error character
     }
@@ -136,6 +140,12 @@ void os_display_char(zchar c)
     if (c == ZC_RETURN || c == '\n' || c == '\r')
     {
         addch(ZC_RETURN);
+        return;
+    }
+
+    if (c == ASCII_ARROW_UP || c == ASCII_ARROW_DOWN) 
+    {
+        addch(c);
         return;
     }
 
