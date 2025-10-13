@@ -73,3 +73,5 @@ extern uint8_t columns; // Number of columns in the display
 
 // Function prototypes
 void update_lcd_display(int top, int left, int bottom, int right);
+void draw_text(char *text, bool highlighted, int top, int offset, int page_start, int selected, int story_count);
+

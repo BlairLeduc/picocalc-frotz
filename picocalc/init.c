@@ -29,8 +29,7 @@ uint16_t phosphor = DEFAULT_PHOSPHOR;						  // Default phosphor type
 static char selected_story[FAT32_MAX_PATH_LEN] = {0};		  // Selected story name
 static char save_path[FAT32_MAX_PATH_LEN] = "/Stories/saves"; // Default save path
 
-static char selected_template[28];
-static char normal_template[28];
+static char template[MAX_DISPLAY_FILENAME_LEN + 1];
 
 // Function to handle system exit
 void _exit(int status)
@@ -275,19 +274,44 @@ int config_handler(void *user, const char *section, const char *name, const char
 
 void story_page(config_t *config, int top, int page_start, int selected)
 {
-	char buffer[40];
-
 	lcd_set_font(&font_8x10);
 	for (int i = 0; i < CONFIG_MAX_STORIES_PER_SCREEN; i++)
 	{
-		strncpy(buffer, i + page_start == selected ? selected_template : normal_template, sizeof(buffer) - 1);
-
 		if (i + page_start < config->story_count)
 		{
-			memcpy(buffer, config->stories[i + page_start].story_filename, MIN(strlen(config->stories[i + page_start].story_filename), MAX_DISPLAY_FILENAME_LEN));
+			bool highlight = i + page_start == selected;
+			char *story_name = config->stories[i + page_start].story_filename;
+			draw_text(story_name, highlight,  top, i , page_start, selected, config->story_count);
 		}
-		lcd_putstr(0, top + i, buffer);
 	}
+}
+
+void draw_text(char *text, bool highlighted, int top, int offset, int page_start, int selected, int story_count)
+{
+	char buffer[40] = {};
+	int row = top + offset;
+
+	strncpy(buffer, template, sizeof(buffer) - 1);
+	memcpy(buffer, text, MIN(strlen(text), MAX_DISPLAY_FILENAME_LEN));
+
+	os_set_text_style(highlighted ? REVERSE_STYLE : NORMAL_STYLE);
+	lcd_putstr(0, row, buffer);
+	os_set_text_style(NORMAL_STYLE);
+
+	// Show split screen indicator
+	lcd_putc(MAX_DISPLAY_FILENAME_LEN, row, 0x19);
+
+	if (page_start > 0 && offset == 0) 
+	{
+		// Show indicator at top of screen
+		lcd_putc(MAX_DISPLAY_FILENAME_LEN, row, 0x81);
+	} 
+	if ((page_start + CONFIG_MAX_STORIES_PER_SCREEN) < story_count && 
+		offset == CONFIG_MAX_STORIES_PER_SCREEN - 1)
+	{
+		// Show indicator at bottom of screen
+		lcd_putc(MAX_DISPLAY_FILENAME_LEN, row, 0x80);
+	} 
 }
 
 story_t *select_story(config_t *config)
@@ -300,22 +324,22 @@ story_t *select_story(config_t *config)
 	int top = 10;
 
 	// Prepare the selection templates
-	for (int i = 0; i < MAX_DISPLAY_FILENAME_LEN; i++)
+	for (int i = 0; i <= MAX_DISPLAY_FILENAME_LEN; i++)
 	{
-		selected_template[i] = '\x12';
-		normal_template[i] = '\x20';
+		template[i] = '\x20';
 	}
-	selected_template[MAX_DISPLAY_FILENAME_LEN] = '\x16';
-	normal_template[MAX_DISPLAY_FILENAME_LEN] = '\x19';
 
 	// Display the banner
 	lcd_clear_screen();
 	lcd_blit(frotz_banner, 30, 0, 259, 84);
 	lcd_set_foreground(FOREGROUND_COLOUR);
 	lcd_set_font(&font_5x10);
-	snprintf(buffer, sizeof(buffer), "Version %s. Port to PicoCalc v%s.", VERSION, PICOCALC_FROTZ_VERSION);
-	lcd_putstr(14, 8, buffer);
-	lcd_putstr(0, 31, "Port Copyright Blair Leduc.");
+	snprintf(buffer, sizeof(buffer), "Version %s. Port to PicoCalc v%s (c) Blair Leduc", VERSION, PICOCALC_FROTZ_VERSION);
+	uint8_t len = strlen(buffer);
+	uint8_t column = (len <= MAX_SCREEN_WIDTH ? (MAX_SCREEN_WIDTH - len) / 2 : 1);
+	lcd_putstr(column, 8, buffer);
+	snprintf(buffer, sizeof(buffer), "Available stories: %d", config->story_count);
+	lcd_putstr(0, 31, buffer);
 	lcd_set_font(columns == 40 ? &font_8x10 : &font_5x10);
 
 	// List available stories from the filesystem
@@ -348,9 +372,7 @@ story_t *select_story(config_t *config)
 
 		// Redraw the previously selected story in normal style
 		lcd_set_font(&font_8x10);
-		strncpy(buffer, normal_template, sizeof(buffer) - 1);
-		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), MAX_DISPLAY_FILENAME_LEN));
-		lcd_putstr(0, top + selected - page_start, buffer);
+		draw_text(config->stories[selected].story_filename, FALSE, top, selected - page_start, page_start, selected, config->story_count);
 
 		if (ch == ZC_ARROW_UP)
 		{
@@ -435,14 +457,11 @@ story_t *select_story(config_t *config)
 			}
 		}
 
-		// Update story name to point to settings
-		lcd_set_font(&font_8x10);
-
-		strncpy(buffer, selected_template, sizeof(buffer) - 1);
-		memcpy(buffer, &config->stories[selected].story_filename, MIN(strlen(config->stories[selected].story_filename), MAX_DISPLAY_FILENAME_LEN));
-		lcd_putstr(0, top + selected - page_start, buffer);
-
 		// Redraw the newly selected story in selected style
+		lcd_set_font(&font_8x10);
+		draw_text(config->stories[selected].story_filename, TRUE, top, selected - page_start, page_start, selected, config->story_count);
+
+		// Update story name to point to settings
 		update_settings_display(top, selected, &config->stories[selected], config->defaults);
 
 	} while (ch != ZC_RETURN);
@@ -666,7 +685,7 @@ void os_init_setup(void)
 					config.story_count++;
 					if (config.story_count >= CONFIG_MAX_STORIES)
 					{
-						break; // Limit to MAX_NUM_STORIES
+						break; // Limit to CONFIG_MAX_STORIES
 					}
 				}
 			}
