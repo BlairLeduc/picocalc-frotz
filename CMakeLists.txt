@@ -23,8 +23,8 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
-set(PICOCALC_FROTZ_VERSION "1.0" CACHE STRING "PicoCalc Frotz version")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICOCALC_FROTZ_VERSION "1.1" CACHE STRING "PicoCalc Frotz version")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
