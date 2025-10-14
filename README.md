@@ -97,5 +97,4 @@ This project uses the following open-source projects:
 >
 > `git submodule update --init --recursive`
 >
-> [Getting started with Raspberry Pi
-Pico-series](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) is a good place to start.
+> [Getting started with Raspberry Pi Pico-series](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) is a good place to start.
