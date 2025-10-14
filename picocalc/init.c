@@ -294,9 +294,9 @@ void draw_text(char *text, bool highlighted, int top, int offset, int page_start
 	strncpy(buffer, template, sizeof(buffer) - 1);
 	memcpy(buffer, text, MIN(strlen(text), MAX_DISPLAY_FILENAME_LEN));
 
-	os_set_text_style(highlighted ? REVERSE_STYLE : NORMAL_STYLE);
+	lcd_set_reverse(highlighted);
 	lcd_putstr(0, row, buffer);
-	os_set_text_style(NORMAL_STYLE);
+	lcd_set_reverse(false);
 
 	// Show split screen indicator
 	lcd_putc(MAX_DISPLAY_FILENAME_LEN, row, 0x19);
@@ -334,7 +334,7 @@ story_t *select_story(config_t *config)
 	lcd_blit(frotz_banner, 30, 0, 259, 84);
 	lcd_set_foreground(FOREGROUND_COLOUR);
 	lcd_set_font(&font_5x10);
-	snprintf(buffer, sizeof(buffer), "Version %s. Port to PicoCalc v%s (c) Blair Leduc", VERSION, PICOCALC_FROTZ_VERSION);
+	snprintf(buffer, sizeof(buffer), "Version %s. PicoCalc Port v%s Copyright 2025 Blair Leduc", VERSION, PICOCALC_FROTZ_VERSION);
 	uint8_t len = strlen(buffer);
 	uint8_t column = (len <= MAX_SCREEN_WIDTH ? (MAX_SCREEN_WIDTH - len) / 2 : 1);
 	lcd_putstr(column, 8, buffer);

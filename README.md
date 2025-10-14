@@ -91,3 +91,7 @@ This project uses the following open-source projects:
 - [inih](https://github.com/benhoyt/inih) – Simple .INI file parser in C, good for embedded systems.
 
 - [PicoCalc Text Starter](https://github.com/BlairLeduc/picocalc-text-starter) – This module provides the drivers for the LCD display, keyboard, audio and file system support for the SD card.
+
+If building from source, you will need to clone the referenced modules:
+
+`git submodule update --init --recursive`
