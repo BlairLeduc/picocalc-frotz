@@ -82,7 +82,7 @@ You can configure how the story will be displayed from the story selector. The s
 
 If a story does not have settings configured, the story will use the display configuration as set in the `settings.ini` file.
 
-# Modules
+# Referenced Modules
 
 This project uses the following open-source projects:
 
@@ -92,6 +92,10 @@ This project uses the following open-source projects:
 
 - [PicoCalc Text Starter](https://github.com/BlairLeduc/picocalc-text-starter) – This module provides the drivers for the LCD display, keyboard, audio and file system support for the SD card.
 
-If building from source, you will need to clone the referenced modules:
-
-`git submodule update --init --recursive`
+> [!NOTE]
+> If building from source, you will need to clone the referenced modules:
+>
+> `git submodule update --init --recursive`
+>
+> [Getting started with Raspberry Pi
+Pico-series](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) is a good place to start.
