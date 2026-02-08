@@ -1,4 +1,4 @@
-# picocalc-frotz
+ # picocalc-frotz
 
 This is an unofficial port of [Frotz](https://davidgriffith.gitlab.io/frotz/) for the [PicoCalc kit](https://www.clockworkpi.com/picocalc). Frotz has been actively developed since 1995 and is a popular interpreter for [Z-Machine](https://en.wikipedia.org/wiki/Z-machine) games, including those from [Infocom](https://en.wikipedia.org/wiki/Infocom).
 
@@ -26,7 +26,13 @@ This project adds a small amount of code to integrate the included modules. Each
 
 # Getting Started
 
-Flash the PicoCalc with the latest release and reboot your PicoCalc.
+Flash the PicoCalc with the latest release and reboot your PicoCalc:
+
+1. Make sure your PicoCalc is off.
+1. Push and hold the BOOTSEL button, accessible through the back of the PicoCalc, while connecting your PicoCalc with a USB cable to a computer. Use the USB port of the Pico, closest to the bottom of the device. 
+1. Release the BOOTSEL button once your Pico appears as a Mass Storage Device called RPI-RP2.
+1. Drag and drop the PicoCalc Frotz UF2 file onto the RPI-RP2 volume. Your Pico will reboot.
+1. Disconnect the USB cable and turn on the PicoCalc. You are now running PicoCalc Frotz.
 
 A simple story selector is presented when you turn on the PicoCalc. This lists the stories stored in the `/Stories` directory on the SD card. You select a story to play, and press enter to begin. 
 
