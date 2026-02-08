@@ -30,8 +30,8 @@ Flash the PicoCalc with the latest release and reboot your PicoCalc:
 
 1. Make sure your PicoCalc is off.
 1. Push and hold the BOOTSEL button, accessible through the back of the PicoCalc, while connecting your PicoCalc with a USB cable to a computer. Use the USB port of the Pico, closest to the bottom of the device. 
-1. Release the BOOTSEL button once your Pico appears as a Mass Storage Device called RPI-RP2.
-1. Drag and drop the PicoCalc Frotz UF2 file onto the RPI-RP2 volume. Your Pico will reboot.
+1. Release the BOOTSEL button once your Pico appears as a mass storage device called `RPI-RP2`.
+1. Drag and drop the PicoCalc Frotz UF2 file onto the `RPI-RP2` volume. Your Pico will reboot.
 1. Disconnect the USB cable and turn on the PicoCalc. You are now running PicoCalc Frotz.
 
 A simple story selector is presented when you turn on the PicoCalc. This lists the stories stored in the `/Stories` directory on the SD card. You select a story to play, and press enter to begin. 
