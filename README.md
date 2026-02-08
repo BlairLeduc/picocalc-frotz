@@ -1,4 +1,4 @@
- # picocalc-frotz
+# picocalc-frotz
 
 This is an unofficial port of [Frotz](https://davidgriffith.gitlab.io/frotz/) for the [PicoCalc kit](https://www.clockworkpi.com/picocalc). Frotz has been actively developed since 1995 and is a popular interpreter for [Z-Machine](https://en.wikipedia.org/wiki/Z-machine) games, including those from [Infocom](https://en.wikipedia.org/wiki/Infocom).
 
