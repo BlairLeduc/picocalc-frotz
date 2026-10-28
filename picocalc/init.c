@@ -633,8 +633,7 @@ void os_quit(int status)
 		print_string("\n\nAn error occurred. Please try again.\n");
 	}
 
-	print_string("\nPress ENTER to select a story, or ");
-	print_string("please turn off your PicoCalc now.\n");
+	print_string("\nPress ENTER to select a story.\n");
 	read_string(1, buffer); // Wait for user input before quitting
 }
 
