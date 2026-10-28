@@ -15,16 +15,41 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.2.0)
-set(toolchainVersion 14_2_Rel1)
-set(picotoolVersion 2.2.0)
+set(sdkVersion 2.3.1)
+set(toolchainVersion 15_2_Rel1)
+set(picotoolVersion 2.3.1)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
-set(PICOCALC_FROTZ_VERSION "1.2" CACHE STRING "PicoCalc Frotz version")
+
+# Version follows the GitHub release tags (vX.Y): the nearest tag is shown on screen,
+# the full git description (e.g. 1.2-3-gabc1234-dirty) goes into the binary info
+unset(PICOCALC_FROTZ_VERSION CACHE)
+find_package(Git QUIET)
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "v[0-9]*"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE PICOCALC_FROTZ_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --match "v[0-9]*"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE PICOCALC_FROTZ_BUILD_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+endif()
+if(NOT PICOCALC_FROTZ_VERSION)
+    set(PICOCALC_FROTZ_VERSION "unknown")
+    set(PICOCALC_FROTZ_BUILD_VERSION "unknown")
+endif()
+string(REGEX REPLACE "^v" "" PICOCALC_FROTZ_VERSION "${PICOCALC_FROTZ_VERSION}")
+string(REGEX REPLACE "^v" "" PICOCALC_FROTZ_BUILD_VERSION "${PICOCALC_FROTZ_BUILD_VERSION}")
+message(STATUS "PicoCalc Frotz version ${PICOCALC_FROTZ_VERSION} (${PICOCALC_FROTZ_BUILD_VERSION})")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -90,7 +115,7 @@ add_executable(picocalc-frotz
 )
 
 pico_set_program_name(picocalc-frotz "picocalc-frotz")
-pico_set_program_version(picocalc-frotz "${PICOCALC_FROTZ_VERSION}")
+pico_set_program_version(picocalc-frotz "${PICOCALC_FROTZ_BUILD_VERSION}")
 pico_set_program_url(picocalc-frotz "https://github.com/BlairLeduc/picocalc-frotz")
 pico_set_program_description(picocalc-frotz "An unofficial port of Frotz to the PicoCalc")
 

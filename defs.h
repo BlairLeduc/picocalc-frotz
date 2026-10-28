@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION "2.55"
+#define VERSION "2.56pre"
 #define RELEASE_NOTES "Unofficial PicoCalc Frotz Port"
 
 /* Basic configuration for embedded/PicoCalc build */

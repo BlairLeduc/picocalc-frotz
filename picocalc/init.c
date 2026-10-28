@@ -20,7 +20,6 @@
 
 #include "frotz-banner.h"
 
-#undef bool
 #include "picocalc_frotz.h"
 #include "version.h"
 
@@ -334,7 +333,7 @@ story_t *select_story(config_t *config)
 	lcd_blit(frotz_banner, 30, 0, 259, 84);
 	lcd_set_foreground(FOREGROUND_COLOUR);
 	lcd_set_font(&font_5x10);
-	snprintf(buffer, sizeof(buffer), "Version %s. PicoCalc Port v%s Copyright 2025 Blair Leduc", VERSION, PICOCALC_FROTZ_VERSION);
+	snprintf(buffer, sizeof(buffer), "Version %s. PicoCalc Port v%s Copyright 2026 Blair Leduc", VERSION, PICOCALC_FROTZ_VERSION);
 	uint8_t len = strlen(buffer);
 	uint8_t column = (len <= MAX_SCREEN_WIDTH ? (MAX_SCREEN_WIDTH - len) / 2 : 1);
 	lcd_putstr(column, 8, buffer);
