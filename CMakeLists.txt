@@ -149,6 +149,11 @@ target_link_libraries(picocalc-frotz
         hardware_pio
         hardware_clocks)
 
+# The time the PicoCalc shell keeps is in the RP2350's always-on timer
+if (TARGET hardware_powman)
+    target_link_libraries(picocalc-frotz hardware_powman)
+endif()
+
 # Add the standard include files to the build
 target_include_directories(picocalc-frotz PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
