@@ -32,8 +32,6 @@ uint16_t phosphor = DEFAULT_PHOSPHOR;						  // Default phosphor type
 static char selected_story[FAT32_MAX_PATH_LEN] = {0};		  // Selected story name
 static char save_path[FAT32_MAX_PATH_LEN] = "/Stories/saves"; // Default save path
 
-static char template[MAX_DISPLAY_FILENAME_LEN + 1];
-
 #define SETTINGS_INI_NAME "/Stories/settings.ini"
 
 // Function to handle system exit
@@ -344,7 +342,7 @@ void draw_text(char *text, bool highlighted, int top, int offset, int page_start
 	char buffer[40] = {};
 	int row = top + offset;
 
-	strncpy(buffer, template, sizeof(buffer) - 1);
+	memset(buffer, ' ', MAX_DISPLAY_FILENAME_LEN);
 	memcpy(buffer, text, MIN(strlen(text), MAX_DISPLAY_FILENAME_LEN));
 
 	lcd_set_reverse(highlighted);
@@ -375,12 +373,6 @@ story_t *select_story(config_t *config)
 	int count = config->story_count - 1;
 	int selected = 0;
 	int top = 10;
-
-	// Prepare the selection templates
-	for (int i = 0; i <= MAX_DISPLAY_FILENAME_LEN; i++)
-	{
-		template[i] = '\x20';
-	}
 
 	// Display the banner
 	lcd_clear_screen();
