@@ -23,6 +23,10 @@
 #include "picocalc_frotz.h"
 #include "version.h"
 
+#if PICO_RP2350
+#include "picocalc_shell.h"
+#endif
+
 uint8_t columns = 40;
 uint16_t phosphor = DEFAULT_PHOSPHOR;						  // Default phosphor type
 static char selected_story[FAT32_MAX_PATH_LEN] = {0};		  // Selected story name
@@ -30,12 +34,51 @@ static char save_path[FAT32_MAX_PATH_LEN] = "/Stories/saves"; // Default save pa
 
 static char template[MAX_DISPLAY_FILENAME_LEN + 1];
 
+#define SETTINGS_INI_NAME "/Stories/settings.ini"
+
 // Function to handle system exit
 void _exit(int status)
 {
 	watchdog_reboot(0, 0, 0); // Reboot the device
 	while (1)
 		; // Should never reach here
+}
+
+#ifdef PICOCALC_SHELL_HAS_TIME
+// The local time the shell keeps, for file dates
+static bool shell_clock(uint16_t *date, uint16_t *time)
+{
+	int64_t utc_ms;
+	int offset_min;
+	if (!picocalc_shell_time(&utc_ms, &offset_min))
+	{
+		return false;
+	}
+
+	time_t t = (time_t)(utc_ms / 1000) + offset_min * 60;
+	struct tm tm;
+	gmtime_r(&t, &tm);
+	return fat32_pack_time(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+						   tm.tm_hour, tm.tm_min, tm.tm_sec, date, time);
+}
+#endif
+
+// Whether Esc can return to the shell
+static bool can_exit_to_shell(void)
+{
+#if PICO_RP2350
+	return picocalc_shell_loader_present();
+#else
+	return false;
+#endif
+}
+
+// Return to the shell; returns only if that is not possible
+static void exit_to_shell(void)
+{
+#if PICO_RP2350
+	picocalc_shell_exit();
+#endif
 }
 
 // Implementation of our own basename function
@@ -243,6 +286,17 @@ void config_write(config_t *config, FILE *file)
 	}
 }
 
+// Write the settings to the INI file (if we can)
+static void write_settings(config_t *config)
+{
+	FILE *ini_file = fopen(SETTINGS_INI_NAME, "w+");
+	if (ini_file)
+	{
+		config_write(config, ini_file);
+		fclose(ini_file);
+	}
+}
+
 int config_handler(void *user, const char *section, const char *name, const char *value)
 {
 	char buffer[CONFIG_MAX_FILENAME_LEN] = {0};
@@ -354,6 +408,13 @@ story_t *select_story(config_t *config)
 	lcd_putstr(47, top + 7, "ont:");
 	lcd_putstr(47, top + 9, "hosphor:");
 	lcd_putstr(52, top + 11, "to start");
+	if (can_exit_to_shell())
+	{
+		lcd_set_underscore(true);
+		lcd_putstr(46, top + 13, "Esc");
+		lcd_set_underscore(false);
+		lcd_putstr(50, top + 13, "for shell");
+	}
 
 	// Initial display of settings
 	update_settings_display(top, selected, &config->stories[selected], config->defaults);
@@ -426,6 +487,15 @@ story_t *select_story(config_t *config)
 				strncpy(selected_story, config->stories[selected].story_filename, sizeof(selected_story) - 1);
 				selected_story[sizeof(selected_story) - 1] = '\0';
 				break;
+			}
+		}
+		else if (ch == ZC_ESCAPE)
+		{
+			if (can_exit_to_shell())
+			{
+				// Keep any font or phosphor changes before leaving
+				write_settings(config);
+				exit_to_shell();
 			}
 		}
 		else if (ch == 'f' || ch == 'F')
@@ -646,6 +716,9 @@ void os_init_setup(void)
 	keyboard_init();
 	audio_init();
 	fat32_init();
+#ifdef PICOCALC_SHELL_HAS_TIME
+	fat32_set_time_source(shell_clock);
+#endif
 
 	lcd_enable_cursor(false);
 	keyboard_set_background_poll(true);
@@ -703,8 +776,7 @@ void os_init_setup(void)
 	qsort(config.stories, config.story_count, sizeof(story_t), story_cmp);
 
 	// Load default settings and the story settings from the INI file
-	const char *ini_name = "/Stories/settings.ini";
-	ini_parse(ini_name, config_handler, &config);
+	ini_parse(SETTINGS_INI_NAME, config_handler, &config);
 
 	story_t *story = select_story(&config);
 	if (!selected_story)
@@ -717,12 +789,7 @@ void os_init_setup(void)
 	}
 
 	// Update the INI file with any new settings (if we can)
-	FILE *ini_file = fopen(ini_name, "w+");
-	if (ini_file)
-	{
-		config_write(&config, ini_file);
-		fclose(ini_file);
-	}
+	write_settings(&config);
 
 	// Construct the full path to the selected story
 	selected_story[0] = '\0';
