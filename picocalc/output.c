@@ -6,7 +6,6 @@
 #include "lcd.h"
 #include "font.h"
 
-#undef bool
 #include "picocalc_frotz.h"
 
 static char latin1_to_ascii[] =

@@ -104,3 +104,15 @@ This project uses the following open-source projects:
 > `git submodule update --init --recursive`
 >
 > [Getting started with Raspberry Pi Pico-series](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) is a good place to start.
+
+# Building
+
+With the Pico SDK installed by the [Raspberry Pi Pico VS Code extension](https://marketplace.visualstudio.com/items?itemName=raspberry-pi.raspberry-pi-pico) (or `PICO_SDK_PATH` set), run:
+
+```sh
+./build.sh            # build for Pico and Pico 2
+./build.sh pico2      # build for one board
+./build.sh --clean    # start from a clean build
+```
+
+The images are written to `dist/picocalc-frotz-<version>-<board>.uf2`. The version comes from the latest release tag (e.g. `v1.2`), with the commit appended for builds that are not on a tag.

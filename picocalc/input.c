@@ -7,7 +7,6 @@
 #include "lcd.h"
 #include "keyboard.h"
 
-#undef bool
 #include "picocalc_frotz.h"
 #include <fat32.h>
 
