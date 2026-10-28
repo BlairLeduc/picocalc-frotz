@@ -633,7 +633,7 @@ void os_quit(int status)
 		print_string("\n\nAn error occurred. Please try again.\n");
 	}
 
-	print_string("\nPress ENTER to select a story.\n");
+	print_string("\nPress Enter to select your next story.\n");
 	read_string(1, buffer); // Wait for user input before quitting
 }
 
